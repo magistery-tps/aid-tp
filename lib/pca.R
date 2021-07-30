@@ -48,7 +48,6 @@ plot_pca <- function(
 isolation_forest_scores <- function(df, ntrees = 3, plot=TRUE) {
   scores <- isolation.forest(df, ntrees = 3, output_score=TRUE)$score
   if(plot) {
-    graphics.off()
     boxplot(scores)
   }
   scores
