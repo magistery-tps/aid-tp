@@ -52,3 +52,49 @@ box_plot <- function(data, horizontal = TRUE, xlab="", ylab="") {
 data.frame.num.hist <- function(df) {
   hist.data.frame(df %>% select(where(is.numeric)))
 }
+
+coparative_boxplot <- function(df, from_col=1, to_col) {
+  par(mfcol = c(from_col, to_col))
+  for (k in from_col:to_col){
+    boxplot(df[k], main = names(df[k]))
+    grid()
+  }
+}
+
+comparative_histplot <- function(df, from_col=1, to_col) {
+  par(mfcol = c(from_col, to_col))
+  
+  for (k in from_col:to_col) {
+    hist(
+      df[,k],
+      proba = T,
+      main = names(df[k]),
+      10
+    )
+    x0 <- seq(
+      min(df[, k]), 
+      max(df[, k]), 
+      le = 50
+    )
+    lines(
+      x0, 
+      dnorm(x0, mean(df[,k]), sd(df[,k])), 
+      col = "red", 
+      lwd = 2
+    )
+    grid()
+  }
+}
+
+
+comparative_qqplot <-function(df, from_col=1, to_col) {
+  pval = list() 
+  par(mfcol = c(from_col, to_col))
+  for (k in from_col:to_col){
+    qqnorm(df[,k],main = names(df[k]))
+    qqline(df[,k],col="red") 
+    pval[k] = ad.test(df[,k])$p.value
+    grid()
+  }
+  pval
+}

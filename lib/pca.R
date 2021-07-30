@@ -18,7 +18,8 @@ plot_pca <- function(
   alpha=0.08, 
   title='', 
   ellipse = TRUE, 
-  colours=c("green", "red")
+  colours=c("green", "red"),
+  labels=c("No", "Yes")
 ) {
   ggbiplot(
     pca_result,
@@ -29,7 +30,7 @@ plot_pca <- function(
     scale_color_manual(
       name=title, 
       values=colours,
-      labels=c("No", "Yes")
+      labels=labels
     ) +
     theme(legend.direction ="horizontal", legend.position = "top")
 }
