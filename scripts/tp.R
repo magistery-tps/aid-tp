@@ -31,13 +31,19 @@ excluded_columns <- c(
   'Orbit.ID',
   'Orbit.Determination.Date',
   'Orbiting.Body',
+  'Est.Dia.in.Feet.min.',
+  'Est.Dia.in.Feet.max.',
+  'Est.Dia.in.M.min.',
+  'Est.Dia.in.M.max.',
+  'Est.Dia.in.KM.min.',
+  'Est.Dia.in.KM.max.',
   'Equinox'
 )
 
 # NASA DATASET: https://www.kaggle.com/shrutimehta/nasa-asteroids-classification
 ds_step_1 <- loadcsv('../datasets/nasa.csv') %>% 
   dplyr::select(-excluded_columns) %>%
-  na.omit 
+  na.omit
 
 str(ds_step_1)
 #
@@ -70,7 +76,9 @@ result
 
 plot_features_importance(result)
 
-best_features <- top_acc_features(result, top=10)
+n_best_features = 5
+
+best_features <- top_acc_features(result, top=n_best_features)
 best_features
 length(best_features)
 
@@ -88,9 +96,6 @@ str(ds_step_3)
 ds_step_4 <- ds_step_3 %>% 
   mutate(Hazardous = case_when(Hazardous %in% c('True') ~ 1, TRUE ~ 0))
 
-original_hazardous <- ds_step_3 %>% dplyr::select(Hazardous)
-rm(ds_step_3)
-
 str(ds_step_4)
 #
 #
@@ -99,27 +104,36 @@ str(ds_step_4)
 # ------------------------------------------------------------------------------
 # 5. Analisis exploratorio
 # ------------------------------------------------------------------------------
-coparative_boxplot(ds_step_4, to_col = 10)
+coparative_boxplot(feat(ds_step_4), to_col=n_best_features)
 
-comparative_histplot(ds_step_4, to_col = 10)
+comparative_histplot(ds_step_4, to_col=n_best_features)
 
-comparative_qqplot(ds_step_4, to_col = 10)
+comparative_qqplot(ds_step_4, to_col=n_best_features)
 
 plot_correlations(feat(ds_step_4))
 
-ggpairs(feat(ds_step_4), aes(colour = original_hazardous$Hazardous, alpha = 0.4))
+ggpairs(feat(ds_step_4), aes(colour = ds_step_3$Hazardous, alpha = 0.4))
 
-pca_result <- prcomp(feat(ds_step_4), scale = TRUE)
+plot_pca_original_variables(feat(ds_step_4))
+plot_pca_original_variables(ds_step_4)
+
+ds_step_4$score <- isolation_forest_scores(feat(ds_step_4))
+ds_step_4_without_outliers <-filter_by_score(ds_step_4, max_score=0.5)
+
+pca_result <- pca(feat(ds_step_4_without_outliers), scale = TRUE, robust = "MVE")
 pca_result
-
-plot_pca(pca_result, alpha = 0)
-
 plot_pca(
   pca_result,
-  groups=factor(original_hazardous$Hazardous),
+  alpha = 0.05,
+  obs.scale = 2,
+  var.scale = 0.5,
+  varname.adjust = 1,
+  varname.size = 3.5,
+  groups=factor(ds_step_4_without_outliers$Hazardous),
   title="Hazardous Asteroids"
 )
 rm(pca_result)
+rm(ds_step_4_without_outliers)
 #
 #
 #
@@ -172,7 +186,19 @@ plot_roc(rda_test_pred$class, scaled_test_set$Hazardous)
 #
 #
 # ------------------------------------------------------------------------------
-# 10. Entrenamos un modelo de regresion logistica
+# 10. Entrenamos un modelo QDA
+# ------------------------------------------------------------------------------
+qda_model <- qda(reg_formula, scaled_train_set)
+
+qda_test_pred  <- predict(qda_model, scaled_test_set)
+
+plot_cm(qda_test_pred$class, scaled_test_set$Hazardous)
+plot_roc(qda_test_pred$class, scaled_test_set$Hazardous)
+#
+#
+#
+# ------------------------------------------------------------------------------
+# 11. Entrenamos un modelo de regresion logistica
 # ------------------------------------------------------------------------------
 rl_model <- glm(reg_formula, scaled_train_set, family=binomial)
 
@@ -187,7 +213,7 @@ plot_roc(rl_test_pred_threshold, scaled_test_set$Hazardous)
 #
 #
 # ------------------------------------------------------------------------------
-# 11. Entrenamos un modelo SVM
+# 12. Entrenamos un modelo SVM
 # ------------------------------------------------------------------------------
 svm_model <- svm(reg_formula, scaled_train_set, kernel="radial")
 
@@ -201,7 +227,7 @@ plot_roc(svm_test_pred_threshold, scaled_test_set$Hazardous)
 #
 #
 # ------------------------------------------------------------------------------
-# 12. Clustering: Kmeans
+# 13. Clustering: Kmeans
 # ------------------------------------------------------------------------------
 # Tipica con estimadores de la normal
 scaled_data_1 <- ds_step_4 %>%

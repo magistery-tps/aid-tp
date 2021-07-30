@@ -2,15 +2,17 @@
 # Import dependencies
 # ------------------------------------------------------------------------------
 library(pacman)
-p_load(dplyr, BiocManager, mdqc, caret)
+p_load(dplyr, BiocManager, mdqc, caret, FactoMineR, factoextra, isotree)
 # ------------------------------------------------------------------------------
 #
 #
 #
 #
-pca <- function(df) {
-  prcomp.robust(df, scale = TRUE, robust="MVE")
+pca <- function(df, scale = TRUE, robust="MVE", nsamp=10) {
+  prcomp.robust(df, scale = scale, robust=robust, nsamp=nsamp)
 }
+
+plot_pca_original_variables <- function(df) PCA(df, graph = T)
 
 plot_pca <- function(
   pca_result, 
@@ -19,13 +21,21 @@ plot_pca <- function(
   title='', 
   ellipse = TRUE, 
   colours=c("green", "red"),
-  labels=c("No", "Yes")
+  labels=c("No", "Yes"),
+  obs.scale = 1,
+  var.scale = 1,
+  varname.adjust = 1.5,
+  varname.size = 3
 ) {
   ggbiplot(
+    obs.scale=obs.scale,
+    var.scale=var.scale,
+    varname.adjust=varname.adjust,
+    varname.size=varname.size,
     pca_result,
-    alpha=alpha, 
+    alpha=alpha,
     groups=groups,
-    ellipse = ellipse
+    ellipse=ellipse
   ) +
     scale_color_manual(
       name=title, 
@@ -34,3 +44,21 @@ plot_pca <- function(
     ) +
     theme(legend.direction ="horizontal", legend.position = "top")
 }
+
+isolation_forest_scores <- function(df, ntrees = 3, plot=TRUE) {
+  scores <- isolation.forest(df, ntrees = 3, output_score=TRUE)$score
+  if(plot) {
+    graphics.off()
+    boxplot(scores)
+  }
+  scores
+}
+
+filter_by_score <- function(df, max_score) {
+  df %>% 
+    dplyr::filter(score <= max_score) %>% 
+    dplyr::select(-score)
+}
+
+
+

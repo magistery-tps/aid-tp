@@ -1,5 +1,5 @@
 library(pacman)
-p_load(devtools, stringi, tidyverse, WVPlots, DT, plotly, GGally, Hmisc, ggrepel)
+p_load(devtools, stringi, tidyverse, WVPlots, DT, plotly, GGally, Hmisc, ggrepel, nortest)
 p_load_gh("vqv/ggbiplot")
 options(warn=-1)
 
@@ -62,6 +62,8 @@ coparative_boxplot <- function(df, from_col=1, to_col) {
 }
 
 comparative_histplot <- function(df, from_col=1, to_col) {
+  df = scale(df[, seq(from_col, to_col)])
+
   par(mfcol = c(from_col, to_col))
   
   for (k in from_col:to_col) {
@@ -88,13 +90,19 @@ comparative_histplot <- function(df, from_col=1, to_col) {
 
 
 comparative_qqplot <-function(df, from_col=1, to_col) {
-  pval = list() 
+  df = scale(df[, seq(from_col, to_col)])
+  pval = list()
+
   par(mfcol = c(from_col, to_col))
+
   for (k in from_col:to_col){
-    qqnorm(df[,k],main = names(df[k]))
+    qqnorm(df[,k], main = names(df[k]))
     qqline(df[,k],col="red") 
+
     pval[k] = ad.test(df[,k])$p.value
+    
     grid()
   }
+
   pval
 }
