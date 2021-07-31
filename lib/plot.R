@@ -71,13 +71,15 @@ coparative_boxplot <- function(df, from_col=1, to_col) {
 comparative_histplot <- function(df, from_col=1, to_col) {
   df = scale(df[, seq(from_col, to_col)])
 
+  column_names <- colnames(df)
+  
   par(mfcol = c(from_col, to_col))
   
   for (k in from_col:to_col) {
     hist(
       df[,k],
       proba = T,
-      main = names(df[k]),
+      main = column_names[k],
       10
     )
     x0 <- seq(
@@ -98,12 +100,17 @@ comparative_histplot <- function(df, from_col=1, to_col) {
 
 comparative_qqplot <-function(df, from_col=1, to_col) {
   df = scale(df[, seq(from_col, to_col)])
+  
+  
+  column_names <- colnames(df)
+  
+
   pval = list()
 
   par(mfcol = c(from_col, to_col))
 
   for (k in from_col:to_col){
-    qqnorm(df[,k], main = names(df[k]))
+    qqnorm(df[,k], main = column_names[k])
     qqline(df[,k],col="red") 
 
     pval[k] = ad.test(df[,k])$p.value

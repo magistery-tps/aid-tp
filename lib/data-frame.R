@@ -33,6 +33,6 @@ index_as_column <- function(df) {
 #
 foreach_col <- function(df, callback) {
   foreach(col_index= 1:ncol(df), .combine = rbind) %dopar% {
-    r <- callback(df, col_index)
+    callback(df, col_index)
   }
 }

@@ -2,7 +2,7 @@
 # Import dependencies
 # ------------------------------------------------------------------------------
 library(pacman)
-p_load(mvnormtest)
+p_load(mvnormtest, biotools, car)
 setwd(this.path::this.dir())
 source('./import.R')
 #
@@ -21,15 +21,39 @@ mult_shapiro_test <- function(features) {
 }
 
 #
-# Test de normalidad uni-variado. Calcula el test de normalidad para cada 
-# columna de dataframe pasado como argumento.
+# Test de homocedasticidad multi-variado
 #
-uni_shapiro_test <- function(df) {
-  foreach_col(
-    feat(ds_step_4), 
-    function(df, col_index) {
-      print(paste(colnames(df)[col_index], '->', col_index))
-      shapiro.test(df[, col_index])
+multi_boxm_test <- function(features, target) boxM(features, target)
+
+#
+# Test de normalidad uni-variado. Calcula el test de normalidad para cada 
+# columna del dataframe pasado como argumento.
+#
+uni_shapiro_test <- function(features) {
+  r <- foreach_col(
+    features, 
+    function(features, col_index) {
+      print(paste('=> Variable: ', colnames(features)[col_index], sep=''))
+      print('')
+      print(shapiro.test(features[, col_index]))
+    }
+  )
+}
+
+#
+# Test de homocedaticidad uni-variado. Calcula el test de homocedaticidad 
+# para cada columna del dataframe pasado como argumento.
+#
+uni_levene_test <- function(features, target) {
+  r <- foreach_col(
+    features, 
+    function(features, col_index) {
+      print(paste('=> Variable: ', colnames(features)[col_index], sep=''))
+      print('')
+      r <- leveneTest(features[, col_index], target)
+      print(r)
+      print('')
+      print('')
     }
   )
 }

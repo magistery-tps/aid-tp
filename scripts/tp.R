@@ -123,7 +123,6 @@ excluded_columns <- c(
   'Equinox',
   'Orbit.Uncertainity'
 )
-
 #
 # Cargamos NASA dataset:
 # (https://www.kaggle.com/shrutimehta/nasa-asteroids-classification)
@@ -211,34 +210,54 @@ comparative_qqplot(feat(ds_step_4), to_col=n_best_features)
 uni_shapiro_test(feat(ds_step_4))
 #
 # Observaciones: 
-#    El resultado de los test uni-variados no es consistente ya que el qqplot 
-#    me muestra que lo mas probable es que una sola variable sea normal pero 
-#    para shapiro todas son normales.
+#  En todos los casos el p-valor < 0.05 y se rechaza normalidad en todas 
+#  las variables. Esto coincido con los qqplot donde en todos los casos 
+#  no son normales salvo en una nunca variable donde parece tender a 
+#  normalidad.
 #
 #
 # 5.4. Test de normalidad muti-variado
 mult_shapiro_test(feat(ds_step_4))
 #
 # Observaciones: 
-#    El p-valore < 0.05 por lo tanto no se rechaza normalidad y tenemos 
-#    normalidad multi-variada. Se corresponde con el resultado del test de 
-#    shapiro uni-variado pero no con el qqplot de cada variable. Entiendo que
-#    todos las variables se acercan a una normal, pero no o son completamente.
+#  El p-valore < 0.05 por lo tanto se rechaza normalidad multi-variada. 
+#  Se corresponde con el resultado del test de 
+#  shapiro uni-variado pero no con el qqplot de cada variable. Entiendo que
+#  todos las variables se acercan a una normal, pero no o son completamente.
 #
 #
-# 5.4. Correlaciones entre variables
+# 5.5. Test de homocedasticidad uni-variado
+uni_levene_test(feat(ds_step_4), ds_step_4$Hazardous)
+#
+# Observaciones: 
+#  - Minimum.Orbit.Intersection: p-valor < 0.05 -> Rechaza homocedasticidad.
+#  - Absolute.Magnitude: p-valor < 0.05 -> Rechaza homocedasticidad.
+#  - Est.Dia.in.Miles.min.: p-valor > 0.05 -> No Rechaza homocedasticidad.
+#  - Perihelion.Distance: p-valor < 0.05 -> Rechaza homocedasticidad.
+#  - Inclination: p-valor > 0.05 -> No Rechaza homocedasticidad.
+#
+#
+# 5.6. Test de homocedasticidad multi-variado
+multi_boxm_test(feat(ds_step_4), ds_step_4$Hazardous)
+#
+# Observaciones: 
+#  El p-valor < 0.05 por lo tanto se rechaza la hipótesis nula y 
+#  podemos decir que las variables tiene no son homocedasticas.
+#
+#
+# 5.7. Correlaciones entre variables
 plot_correlations(feat(ds_step_4))
 #
-# 5.5. Análisis completo
+# 5.8. Análisis completo
 ggpairs(feat(ds_step_4), aes(colour = ds_step_3$Hazardous, alpha = 0.4))
 #
 #
-# 5.6. PCA: Comparación de variables originales con/sin la variable a predecir.
+# 5.9. PCA: Comparación de variables originales con/sin la variable a predecir.
 plot_pca_original_variables(feat(ds_step_4))
 plot_pca_original_variables(ds_step_4)
 #
 #
-# 5.6. PCA: Con observaciones discriminadas pro clase. Primero quitamos 
+# 5.10. PCA: Con observaciones discriminadas pro clase. Primero quitamos 
 # outliers para poder ver con mas claridad el biplot.
 ds_without_outliers <- filter_outliers(ds_step_4, max_score=0.52)
 plot_robust_pca(ds_without_outliers)
@@ -280,6 +299,10 @@ plot_cm(lda_test_pred$class, scaled_test_set$Hazardous)
 graphics.off()
 plot_roc(lda_test_pred$class, scaled_test_set$Hazardous)
 
+
+fbeta_score(scaled_test_set$Hazardous, lda_test_pred$class, beta = 1)
+
+
 lda_model$scaling
 #
 #
@@ -309,7 +332,7 @@ plot_roc(rda_test_pred$class, scaled_test_set$Hazardous)
 #
 #
 # ------------------------------------------------------------------------------
-# 11.Entrenamos un modelo de Regresion logistica
+# 11.Entrenamos un modelo de regresión logística
 # ------------------------------------------------------------------------------
 rl_model <- glm(reg_formula, scaled_train_set, family=binomial)
 

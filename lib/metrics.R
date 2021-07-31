@@ -2,7 +2,7 @@
 # Import dependencies
 # ------------------------------------------------------------------------------
 library(pacman)
-p_load(ROCit, cvms, pROC, cutpointr)
+p_load(ROCit, cvms, pROC, cutpointr, Metrics)
 # ------------------------------------------------------------------------------
 #
 #
