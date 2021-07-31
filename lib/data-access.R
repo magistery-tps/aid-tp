@@ -29,6 +29,3 @@ plot_hist_collection <- function(collection_name, name, binwidth=0.5) {
     binwidth=binwidth
   )
 }
-
-
-

@@ -1,32 +1,49 @@
-# ------------------------------------------------------------------------------
-# Import dependencies
-# ------------------------------------------------------------------------------
+options(warn=-1)
+#
+#
+# ==============================================================================
+# Importamos dependencias
+# ==============================================================================
 # install.packages('pacman')
 library(pacman)
 p_load(this.path, dplyr)
 setwd(this.path::this.dir())
-source('../lib/all.R')
-# ------------------------------------------------------------------------------
+#
+# Contiene todas las librerias y funciones comunes usada en este tp.
+source('../lib/common-lib.R')
+# ==============================================================================
 #
 #
 #
 #
-# ------------------------------------------------------------------------------
-# Funciones
-# ------------------------------------------------------------------------------
+#
+#
+# ==============================================================================
+# Funciones Helper
+# ==============================================================================
+#
+# Devuelve únicamente los features del dataset.
+#
 feat <- function(df) df %>% dplyr::select(-Hazardous)
-
-filter_outliers <- function(df, max_score, plot=TRUE) {
+# 
+# Filtra las observaciones que sean ourliers multi-variados mediante el 
+# argumento max_score. También permite visualizar un boxplot de la variable
+# score, para ver donde se puede poner el punto de corte.
+#
+filter_outliers <- function(df, max_score, plot_score_boxplot=TRUE) {
   tmp_df <- data.frame(df)
-  tmp_df$score <- isolation_forest_scores(feat(tmp_df), plot=plot)
-  
+  tmp_df$score <- isolation_forest_scores(feat(tmp_df), plot=plot_score_boxplot)
+
   ds_without_outliers <- filter_by_score(tmp_df, max_score=max_score)
 
   rm(tmp_df)
   
   ds_without_outliers
 }
-
+#
+# Gráfica dos componentes principales(Las de mayor varianza)usando el método
+# robusto MVE para evitar outliers multi-variados.
+#
 plot_robust_pca <- function(
   df,
   target_col     = "Hazardous",
@@ -63,7 +80,16 @@ plot_robust_pca <- function(
 
   result
 }
-
+# ==============================================================================
+#
+#
+#
+#
+#
+#
+# ==============================================================================
+# Inicio del análisis
+# ==============================================================================
 set.seed(1)
 #
 #
@@ -72,7 +98,7 @@ set.seed(1)
 # ------------------------------------------------------------------------------
 # 1. Cargamos el dataset.
 # ------------------------------------------------------------------------------
-# Excluimos las columnas no numericas que no nos interesan para este analisis.
+# Excluimos las columnas no numéricas que no nos interesan para este análisis.
 excluded_columns <- c(
   'Neo.Reference.ID',
   'Name',
@@ -101,7 +127,7 @@ str(ds_step_1)
 #
 #
 # ------------------------------------------------------------------------------
-# 2: Eliminamos las columnas que estan altamente correlacionadas
+# 2. Eliminamos las columnas que están altamente co-relacionadas
 # ------------------------------------------------------------------------------
 high_correlated_columns <- find_high_correlated_columns(
   feat(ds_step_1), 
@@ -141,7 +167,7 @@ str(ds_step_3)
 #
 #
 # ------------------------------------------------------------------------------
-# 4. Transformamos las clases a numeros
+# 4. Transformamos las clases a números
 # ------------------------------------------------------------------------------
 ds_step_4 <- ds_step_3 %>% 
   mutate(Hazardous = case_when(Hazardous %in% c('True') ~ 1, TRUE ~ 0))
@@ -152,11 +178,11 @@ str(ds_step_4)
 #
 #
 # ------------------------------------------------------------------------------
-# 5. Analisis exploratorio
+# 5. Análisis Exploratorio
 # ------------------------------------------------------------------------------
 #
 #
-# 5.1. Boxplots comparativos
+# 5.1. Boxplot comparativos
 coparative_boxplot(feat(ds_step_4), to_col=n_best_features)
 #
 #
@@ -279,7 +305,7 @@ plot_roc(svm_test_pred_threshold, scaled_test_set$Hazardous)
 #
 #
 # ------------------------------------------------------------------------------
-# 13. Kmeans Clustering
+# 13. KMeans Clustering
 # ------------------------------------------------------------------------------
 #
 #

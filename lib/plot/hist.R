@@ -1,9 +1,16 @@
+# ------------------------------------------------------------------------------
+# Import dependencies
+# ------------------------------------------------------------------------------
 library(pacman)
 p_load(stringi, tidyverse, modeest, plotly)
 options(warn=-1)
 
 source('../lib/data-frame.R')
-
+# ------------------------------------------------------------------------------
+#
+#
+#
+#
 # -----------------------------------------------------------------------------
 # Descripcion: Grafian con la libreria estandar un histograma desde un array
 #              de valores.. Tambien Indica donde se encuentra: 

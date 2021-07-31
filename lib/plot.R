@@ -1,3 +1,6 @@
+# ------------------------------------------------------------------------------
+# Import dependencies
+# ------------------------------------------------------------------------------
 library(pacman)
 p_load(devtools, stringi, tidyverse, WVPlots, DT, plotly, GGally, Hmisc, ggrepel, nortest)
 p_load_gh("vqv/ggbiplot")
@@ -5,7 +8,11 @@ options(warn=-1)
 
 source('../lib/plot/hist.R')
 source('../lib/plot/pie.R')
-
+# ------------------------------------------------------------------------------
+#
+#
+#
+#
 plot_correlations <- function(data) {
   cor_matrix = cor(data) 
   cor_matrix[lower.tri(cor_matrix, diag = TRUE)] <- NA
