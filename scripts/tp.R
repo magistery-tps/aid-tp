@@ -298,10 +298,7 @@ lda_test_pred  <- predict(lda_model, scaled_test_set)
 plot_cm(lda_test_pred$class, scaled_test_set$Hazardous)
 graphics.off()
 plot_roc(lda_test_pred$class, scaled_test_set$Hazardous)
-
-
-fbeta_score(scaled_test_set$Hazardous, lda_test_pred$class, beta = 1)
-
+f_beta_score(lda_test_pred$class, scaled_test_set$Hazardous, beta=2)
 
 lda_model$scaling
 #
@@ -316,6 +313,7 @@ qda_test_pred  <- predict(qda_model, scaled_test_set)
 
 plot_cm(qda_test_pred$class, scaled_test_set$Hazardous)
 plot_roc(qda_test_pred$class, scaled_test_set$Hazardous)
+f_beta_score(qda_test_pred$class, scaled_test_set$Hazardous, beta=2)
 #
 #
 #
@@ -328,6 +326,7 @@ rda_test_pred  <- predict(rda_model, scaled_test_set)
 
 plot_cm(rda_test_pred$class, scaled_test_set$Hazardous)
 plot_roc(rda_test_pred$class, scaled_test_set$Hazardous)
+f_beta_score(rda_test_pred$class, scaled_test_set$Hazardous, beta=2)
 #
 #
 #
@@ -343,6 +342,7 @@ rl_test_pred_threshold <- ifelse(rl_test_pred >= rl_threshold, 1, 0)
 
 plot_cm(rl_test_pred_threshold, scaled_test_set$Hazardous)
 plot_roc(rl_test_pred_threshold, scaled_test_set$Hazardous)
+f_beta_score(rl_test_pred_threshold, scaled_test_set$Hazardous, beta=2)
 #
 #
 #
@@ -357,6 +357,7 @@ svm_test_pred_threshold <- ifelse(svm_test_pred >= rl_threshold, 1, 0)
 
 plot_text_cm(svm_test_pred_threshold, scaled_test_set$Hazardous)
 plot_roc(svm_test_pred_threshold, scaled_test_set$Hazardous)
+f_beta_score(svm_test_pred_threshold, scaled_test_set$Hazardous, beta=2)
 #
 #
 #

@@ -10,6 +10,19 @@ p_load(ROCit, cvms, pROC, cutpointr, Metrics)
 #
 
 #
+# Metrica F Beta score
+#
+f_beta_score <- function(prediction, reality, beta=1, show=T) {
+  score <- fbeta_score(as.numeric(reality), as.numeric(prediction), beta=beta)
+  if(show) {
+    print(paste('F', beta, 'Score: ', score, sep=''))
+  } else {
+    score    
+  }
+}
+
+
+#
 # Grafica de la curva ROC.
 #
 plot_roc <- function(predictions, reality) {
