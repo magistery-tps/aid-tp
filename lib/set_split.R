@@ -13,6 +13,9 @@ train_test_split <- function(df, train_size=.7) {
   
   train_set <- df[train_ind, ]
   test_set  <- df[-train_ind, ]
-  
+
+  print(paste('Train Set size:', nrow(train_set)))
+  print(paste('Test set size:', nrow(test_set)))
+
   list(train_set, test_set)
 }

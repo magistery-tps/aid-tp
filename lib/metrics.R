@@ -12,12 +12,12 @@ p_load(ROCit, cvms, pROC, cutpointr, Metrics)
 #
 # Metrica F Beta score
 #
-f_beta_score <- function(prediction, reality, beta=1, show=T) {
+f_beta_score <- function(prediction, reality, beta=1, show=TRUE) {
   score <- fbeta_score(as.numeric(reality), as.numeric(prediction), beta=beta)
   if(show) {
     print(paste('F', beta, 'Score: ', score, sep=''))
   } else {
-    score    
+    score
   }
 }
 

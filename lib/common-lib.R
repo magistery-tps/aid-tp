@@ -23,4 +23,5 @@ import('./set_split.R')
 import('./models.R')
 import('./test.R')
 import('./metrics.R')
+import('./balance.R')
 # ------------------------------------------------------------------------------

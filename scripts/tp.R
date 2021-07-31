@@ -249,7 +249,7 @@ multi_boxm_test(feat(ds_step_4), ds_step_4$Hazardous)
 plot_correlations(feat(ds_step_4))
 #
 # 5.8. Análisis completo
-ggpairs(feat(ds_step_4), aes(colour = ds_step_3$Hazardous, alpha = 0.4))
+ggpairs(feat(ds_step_4), aes(colour = ds_step_4$Hazardous, alpha = 0.4))
 #
 #
 # 5.9. PCA: Comparación de variables originales con/sin la variable a predecir.
@@ -267,9 +267,17 @@ plot_robust_pca(ds_without_outliers)
 # ------------------------------------------------------------------------------
 # 6. Train test split
 # ------------------------------------------------------------------------------
-c(train_set, test_set) %<-% train_test_split(ds_step_4, train_size=.8)
-nrow(train_set)
-nrow(test_set)
+c(raw_train_set, raw_test_set) %<-% train_test_split(ds_step_4, train_size=.8)
+#
+#
+#
+# ------------------------------------------------------------------------------
+# 7. Método SMOTE para balancear el dataset.
+# (https://www.analyticsvidhya.com/blog/2021/04/smote-and-best-subset-selection-for-linear-regression-in-r/)
+# ------------------------------------------------------------------------------
+# balanced_train_set <- smote_balance(raw_train_set, raw_train_set$Hazardous)
+#rm(raw_train_set)
+balanced_train_set <- raw_train_set
 #
 #
 #
@@ -277,13 +285,13 @@ nrow(test_set)
 # 7. Escalamos las variables numéricas(Restamos la media y dividimos por el
 #    desvío).
 # ------------------------------------------------------------------------------
-scaled_train_set <- train_set %>% 
+train_set <- balanced_train_set %>% 
   mutate_at(vars(-Hazardous), ~(scale(.) %>% as.vector))
-scaled_test_set  <- test_set %>% 
+test_set  <- raw_test_set %>% 
   mutate_at(vars(-Hazardous), ~(scale(.) %>% as.vector))
 
-rm(train_set)
-rm(test_set)
+rm(balanced_train_set)
+rm(raw_test_set)
 #
 #
 #
@@ -292,13 +300,13 @@ rm(test_set)
 # ------------------------------------------------------------------------------
 reg_formula <- formula(Hazardous~.)
 
-lda_model <- lda(reg_formula, scaled_train_set)
-lda_test_pred  <- predict(lda_model, scaled_test_set)
+lda_model <- lda(reg_formula, train_set)
+lda_test_pred  <- predict(lda_model, test_set)
 
-plot_cm(lda_test_pred$class, scaled_test_set$Hazardous)
+plot_cm(lda_test_pred$class, test_set$Hazardous)
 graphics.off()
-plot_roc(lda_test_pred$class, scaled_test_set$Hazardous)
-f_beta_score(lda_test_pred$class, scaled_test_set$Hazardous, beta=2)
+plot_roc(lda_test_pred$class, test_set$Hazardous)
+f_beta_score(lda_test_pred$class, test_set$Hazardous, beta=2)
 
 lda_model$scaling
 #
@@ -307,57 +315,57 @@ lda_model$scaling
 # ------------------------------------------------------------------------------
 # 9. Entrenamos un modelo QDA
 # ------------------------------------------------------------------------------
-qda_model <- qda(reg_formula, scaled_train_set)
+qda_model <- qda(reg_formula, train_set)
 
-qda_test_pred  <- predict(qda_model, scaled_test_set)
+qda_test_pred  <- predict(qda_model, test_set)
 
-plot_cm(qda_test_pred$class, scaled_test_set$Hazardous)
-plot_roc(qda_test_pred$class, scaled_test_set$Hazardous)
-f_beta_score(qda_test_pred$class, scaled_test_set$Hazardous, beta=2)
+plot_cm(qda_test_pred$class, test_set$Hazardous)
+plot_roc(qda_test_pred$class, test_set$Hazardous)
+f_beta_score(qda_test_pred$class, test_set$Hazardous, beta=2)
 #
 #
 #
 # ------------------------------------------------------------------------------
 # 10. Entrenamos un modelo RDA
 # ------------------------------------------------------------------------------
-rda_model <- rda(reg_formula, scaled_train_set)
+rda_model <- rda(reg_formula, train_set)
 
-rda_test_pred  <- predict(rda_model, scaled_test_set)
+rda_test_pred  <- predict(rda_model, test_set)
 
-plot_cm(rda_test_pred$class, scaled_test_set$Hazardous)
-plot_roc(rda_test_pred$class, scaled_test_set$Hazardous)
-f_beta_score(rda_test_pred$class, scaled_test_set$Hazardous, beta=2)
+plot_cm(rda_test_pred$class, test_set$Hazardous)
+plot_roc(rda_test_pred$class, test_set$Hazardous)
+f_beta_score(rda_test_pred$class, test_set$Hazardous, beta=2)
 #
 #
 #
 # ------------------------------------------------------------------------------
 # 11.Entrenamos un modelo de regresión logística
 # ------------------------------------------------------------------------------
-rl_model <- glm(reg_formula, scaled_train_set, family=binomial)
+rl_model <- glm(reg_formula, train_set, family=binomial)
 
-rl_test_pred <- predict(rl_model, scaled_test_set)
+rl_test_pred <- predict(rl_model, test_set)
 
 rl_threshold <- 0.4
 rl_test_pred_threshold <- ifelse(rl_test_pred >= rl_threshold, 1, 0)
 
-plot_cm(rl_test_pred_threshold, scaled_test_set$Hazardous)
-plot_roc(rl_test_pred_threshold, scaled_test_set$Hazardous)
-f_beta_score(rl_test_pred_threshold, scaled_test_set$Hazardous, beta=2)
+plot_cm(rl_test_pred_threshold, test_set$Hazardous)
+plot_roc(rl_test_pred_threshold, test_set$Hazardous)
+f_beta_score(rl_test_pred_threshold, test_set$Hazardous, beta=2)
 #
 #
 #
 # ------------------------------------------------------------------------------
 # 12. Entrenamos un modelo SVM
 # ------------------------------------------------------------------------------
-svm_model <- svm(reg_formula, scaled_train_set, kernel="radial")
+svm_model <- svm(reg_formula, train_set, kernel="radial")
 
-svm_test_pred <- predict(svm_model, scaled_test_set)
+svm_test_pred <- predict(svm_model, test_set)
 svm_threshold <- 0.5
 svm_test_pred_threshold <- ifelse(svm_test_pred >= rl_threshold, 1, 0)
 
-plot_text_cm(svm_test_pred_threshold, scaled_test_set$Hazardous)
-plot_roc(svm_test_pred_threshold, scaled_test_set$Hazardous)
-f_beta_score(svm_test_pred_threshold, scaled_test_set$Hazardous, beta=2)
+plot_text_cm(svm_test_pred_threshold, test_set$Hazardous)
+plot_roc(svm_test_pred_threshold, test_set$Hazardous)
+f_beta_score(svm_test_pred_threshold, test_set$Hazardous, beta=2)
 #
 #
 #
