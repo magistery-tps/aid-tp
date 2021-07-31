@@ -4,13 +4,23 @@
 library(pacman)
 p_load(this.path)
 setwd(this.path::this.dir())
-source('./csv.R')
-source('./plot.R')
-source('./df.R')
-source('./importance.R')
-source('./correlation.R')
-source('./pca.R')
-source('./set_split.R')
-source('./metrics.R')
-source('./models.R')
+source('./import.R')
+
+# Basic tools
+import('./reflection.R')
+import('./data-frame.R')
+
+import('./csv.R')
+import('./plot.R')
+
+# Exploratory analisys
+import('./importance.R')
+import('./correlation.R')
+import('./pca.R')
+
+# Model tools
+import('./set_split.R')
+import('./models.R')
+import('./test.R')
+import('./metrics.R')
 # ------------------------------------------------------------------------------

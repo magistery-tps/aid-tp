@@ -8,22 +8,37 @@ p_load(ROCit, cvms, pROC, cutpointr)
 #
 #
 #
+
+#
+# Grafica de la curva ROC.
+#
 plot_roc <- function(predictions, reality) {
   result <- rocit(as.numeric(predictions), as.numeric(reality))
   plot(result)
   result
 }
 
+
+#
+# Grafica de la matriz de confusión.
+#
 plot_cm <- function(predictions, reality) {
   plot_confusion_matrix(
     confusion_matrix(targets=reality, prediction=predictions)
   )
 }
 
+
+#
+# Imprime la matriz de confusión.
+#
 plot_text_cm <- function(predictions, reality) {
   table(predictions, reality, dnn = c("Reality", "Prediction"))
 }
 
+#
+# Calcula el mejor punto de corte.
+#
 best_roc_threshold <- function(predictions, reality) {
   df <- data.frame(
     prediction= as.numeric(predictions),
@@ -97,6 +112,10 @@ plot_sil_sse <- function(metrics, kmax) {
   grid()
 }
 
+
+#
+# Grafica las métricas sil y sse para cada valor de k jasta kmax.
+#
 clustering_metrics_plot <- function(data, kmax=10, f="kmeans") {
   metrics <- clustering_metrics(data, kmax, f)
   plot_sil_sse(metrics, kmax)

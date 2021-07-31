@@ -4,13 +4,20 @@ options(warn=-1)
 # ==============================================================================
 # Importamos dependencias
 # ==============================================================================
-# install.packages('pacman')
+#
+#
+# ===> IMPORTANTE: Instalar la librería PACMAN es requisito!!! <=====
+#
+# ===> install.packages('pacman')
+#
+#
 library(pacman)
 p_load(this.path, dplyr)
 setwd(this.path::this.dir())
+source('../lib/import.R')
 #
-# Contiene todas las librerias y funciones comunes usada en este tp.
-source('../lib/common-lib.R')
+# Contiene todas las librerías y funciones comunes usadas en este TP.
+import('../lib/common-lib.R')
 # ==============================================================================
 #
 #
@@ -51,8 +58,8 @@ plot_robust_pca <- function(
   alpha          = 0.08,
   obs.scale      = 2,
   var.scale      = 0.5,
-  varname.adjust = 0.5,
-  varname.size   = 3.5,
+  varname.adjust = 1.2,
+  varname.size   = 3.8,
   colours        = c("green", "red"),
   labels         = c("No", "Yes"),
   groups         = NULL
@@ -113,10 +120,14 @@ excluded_columns <- c(
   'Est.Dia.in.M.max.',
   'Est.Dia.in.KM.min.',
   'Est.Dia.in.KM.max.',
-  'Equinox'
+  'Equinox',
+  'Orbit.Uncertainity'
 )
 
-# NASA DATASET: https://www.kaggle.com/shrutimehta/nasa-asteroids-classification
+#
+# Cargamos NASA dataset:
+# (https://www.kaggle.com/shrutimehta/nasa-asteroids-classification)
+#
 ds_step_1 <- loadcsv('../datasets/nasa.csv') %>% 
   dplyr::select(-excluded_columns) %>%
   na.omit
@@ -153,6 +164,7 @@ result
 plot_features_importance(result)
 
 n_best_features = 5
+# n_best_features = 15
 
 best_features <- top_acc_features(result, top=n_best_features)
 best_features
@@ -187,10 +199,31 @@ coparative_boxplot(feat(ds_step_4), to_col=n_best_features)
 #
 #
 # 5.2. Histogramas y densidad
-comparative_histplot(ds_step_4, to_col=n_best_features)
+comparative_histplot(feat(ds_step_4), to_col=n_best_features)
 #
-# 5.3. Test de normalidad gráfico
-comparative_qqplot(ds_step_4, to_col=n_best_features)
+# 5.3. Analizamos gráfico de normalidad univariado
+comparative_qqplot(feat(ds_step_4), to_col=n_best_features)
+#
+# Observaciones: 
+#    Al parecer una sola variable parece ser normal.
+#
+# 5.3. Test de normalidad uni-variado
+uni_shapiro_test(feat(ds_step_4))
+#
+# Observaciones: 
+#    El resultado de los test uni-variados no es consistente ya que el qqplot 
+#    me muestra que lo mas probable es que una sola variable sea normal pero 
+#    para shapiro todas son normales.
+#
+#
+# 5.4. Test de normalidad muti-variado
+mult_shapiro_test(feat(ds_step_4))
+#
+# Observaciones: 
+#    El p-valore < 0.05 por lo tanto no se rechaza normalidad y tenemos 
+#    normalidad multi-variada. Se corresponde con el resultado del test de 
+#    shapiro uni-variado pero no con el qqplot de cada variable. Entiendo que
+#    todos las variables se acercan a una normal, pero no o son completamente.
 #
 #
 # 5.4. Correlaciones entre variables
@@ -307,7 +340,6 @@ plot_roc(svm_test_pred_threshold, scaled_test_set$Hazardous)
 # ------------------------------------------------------------------------------
 # 13. KMeans Clustering
 # ------------------------------------------------------------------------------
-#
 #
 # 13.1. Primero definimos cuantos grupos utilizar.
 # Tipica con estimadores de la normal
