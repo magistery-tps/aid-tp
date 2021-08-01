@@ -1,2 +1,1 @@
-# aid-tp
-aid-tip
+# Analisis inteligente de datos: Trabajo practico
