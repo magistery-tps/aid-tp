@@ -16,81 +16,12 @@ p_load(this.path, dplyr)
 setwd(this.path::this.dir())
 source('../lib/import.R')
 #
-# Contiene todas las librerías y funciones comunes usadas en este TP.
+# Es una librería de funciones comunes desarrolladas a partir de este TP.
 import('../lib/common-lib.R')
+#
+# Funciones especificas para este TP.
+import('../scripts/helper_functions.R')
 # ==============================================================================
-#
-#
-#
-#
-#
-#
-# ==============================================================================
-# Funciones Helper
-# ==============================================================================
-#
-# Devuelve únicamente los features del dataset.
-#
-feat <- function(df) df %>% dplyr::select(-Hazardous)
-# 
-# Filtra las observaciones que sean ourliers multi-variados mediante el 
-# argumento max_score. También permite visualizar un boxplot de la variable
-# score, para ver donde se puede poner el punto de corte.
-#
-filter_outliers <- function(df, max_score, plot_score_boxplot=TRUE) {
-  tmp_df <- data.frame(df)
-  tmp_df$score <- isolation_forest_scores(feat(tmp_df), plot=plot_score_boxplot)
-
-  ds_without_outliers <- filter_by_score(tmp_df, max_score=max_score)
-
-  rm(tmp_df)
-  
-  ds_without_outliers
-}
-#
-# Gráfica dos componentes principales(Las de mayor varianza)usando el método
-# robusto MVE para evitar outliers multi-variados.
-#
-plot_robust_pca <- function(
-  df,
-  target_col     = "Hazardous",
-  title          = "Hazardous Asteroids",
-  alpha          = 0.08,
-  obs.scale      = 2,
-  var.scale      = 0.5,
-  varname.adjust = 1.2,
-  varname.size   = 3.8,
-  colours        = c("green", "red"),
-  labels         = c("No", "Yes"),
-  groups         = NULL
-) {
-  pca_result <- pca(feat(df), scale = TRUE, robust = "MVE")
-
-  if(is.null(groups)) {
-    groups <- factor(df[[target_col]])
-  }
-
-  result <- plot_pca(
-    pca_result,
-    alpha = alpha,
-    obs.scale = obs.scale,
-    var.scale = var.scale,
-    varname.adjust = varname.adjust,
-    varname.size = varname.size,
-    colours = colours,
-    labels = labels,
-    title=title,
-    groups=groups
-  )
-
-  rm(pca_result)
-
-  result
-}
-# ==============================================================================
-#
-#
-#
 #
 #
 #
@@ -170,7 +101,7 @@ best_features
 length(best_features)
 
 ds_step_3 <- ds_step_2 %>% dplyr::select(c(best_features, c(Hazardous)))
-rm(ds_step_2)
+# rm(ds_step_2)
 
 str(ds_step_3)
 #
@@ -253,8 +184,8 @@ ggpairs(feat(ds_step_4), aes(colour = ds_step_4$Hazardous, alpha = 0.4))
 #
 #
 # 5.9. PCA: Comparación de variables originales con/sin la variable a predecir.
-plot_pca_original_variables(feat(ds_step_4))
-plot_pca_original_variables(ds_step_4)
+plot_pca_original_variables(feat(ds_step_2))
+plot_pca_original_variables(feat(ds_step_3))
 #
 #
 # 5.10. PCA: Con observaciones discriminadas pro clase. Primero quitamos 
@@ -282,7 +213,7 @@ balanced_train_set <- raw_train_set
 #
 #
 # ------------------------------------------------------------------------------
-# 7. Escalamos las variables numéricas(Restamos la media y dividimos por el
+# 8. Escalamos las variables numéricas(Restamos la media y dividimos por el
 #    desvío).
 # ------------------------------------------------------------------------------
 train_set <- balanced_train_set %>% 
@@ -296,7 +227,7 @@ rm(raw_test_set)
 #
 #
 # ------------------------------------------------------------------------------
-# 8. Entrenamos un modelo LDA
+# 9. Entrenamos un modelo LDA
 # ------------------------------------------------------------------------------
 reg_formula <- formula(Hazardous~.)
 
@@ -313,7 +244,7 @@ lda_model$scaling
 #
 #
 # ------------------------------------------------------------------------------
-# 9. Entrenamos un modelo QDA
+# 10. Entrenamos un modelo QDA
 # ------------------------------------------------------------------------------
 qda_model <- qda(reg_formula, train_set)
 
@@ -326,7 +257,7 @@ f_beta_score(qda_test_pred$class, test_set$Hazardous, beta=2)
 #
 #
 # ------------------------------------------------------------------------------
-# 10. Entrenamos un modelo RDA
+# 11. Entrenamos un modelo RDA
 # ------------------------------------------------------------------------------
 rda_model <- rda(reg_formula, train_set)
 
@@ -339,7 +270,7 @@ f_beta_score(rda_test_pred$class, test_set$Hazardous, beta=2)
 #
 #
 # ------------------------------------------------------------------------------
-# 11.Entrenamos un modelo de regresión logística
+# 12.Entrenamos un modelo de regresión logística
 # ------------------------------------------------------------------------------
 rl_model <- glm(reg_formula, train_set, family=binomial)
 
@@ -355,7 +286,7 @@ f_beta_score(rl_test_pred_threshold, test_set$Hazardous, beta=2)
 #
 #
 # ------------------------------------------------------------------------------
-# 12. Entrenamos un modelo SVM
+# 13. Entrenamos un modelo SVM
 # ------------------------------------------------------------------------------
 svm_model <- svm(reg_formula, train_set, kernel="radial")
 
@@ -370,11 +301,11 @@ f_beta_score(svm_test_pred_threshold, test_set$Hazardous, beta=2)
 #
 #
 # ------------------------------------------------------------------------------
-# 13. KMeans Clustering
+# 14. KMeans Clustering
 # ------------------------------------------------------------------------------
 #
-# 13.1. Primero definimos cuantos grupos utilizar.
-# Tipica con estimadores de la normal
+# 14.1. Primero definimos cuantos grupos utilizar.
+# Típica con estimadores de la normal
 scaled_data_1 <- ds_step_4 %>%
   dplyr::select(-Hazardous) %>%
   mutate(~(scale(.) %>% as.vector))
@@ -389,14 +320,14 @@ scaled_data_2 <- apply(
 clustering_metrics_plot(scaled_data_1)
 clustering_metrics_plot(scaled_data_2)
 #
-# 13.2. Kmeans
+# 14.2. Kmeans
 n_clusters <- 2
 kmeans_model <- kmeans(scaled_data_1, n_clusters)
 
 km_ds_step_4 <- data.frame(ds_step_4)
 km_ds_step_4$kmeans <- kmeans_model$cluster
 #
-# 13.2. biplot
+# 14.2. biplot
 ds_without_outliers <- filter_outliers(km_ds_step_4, max_score=0.5)
 plot_robust_pca(
   ds_without_outliers %>% dplyr::select(-kmeans),
@@ -406,7 +337,7 @@ plot_robust_pca(
 #
 #
 # ------------------------------------------------------------------------------
-# 14. Hierarchical Clustering
+# 15. Hierarchical Clustering
 # ------------------------------------------------------------------------------
 n_clusters <- 2
 
@@ -437,4 +368,6 @@ ds_without_outliers <- filter_outliers(hc_ds, max_score=0.57)
 plot_robust_pca(
   ds_without_outliers %>% dplyr::select(-her_ward),
   groups = factor(ds_without_outliers$her_ward),
+  colours=c("orange","cyan","blue","magenta","yellow","black"),
+  labels=c("grupo 1", "grupo 2","grupo 3","grupo 4","grupo 5","grupo 6")
 )

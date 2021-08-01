@@ -6,7 +6,7 @@ p_load(mvnormtest, biotools, car)
 setwd(this.path::this.dir())
 source('./import.R')
 #
-import('../data-frame.R')
+import('./data-frame.R')
 # ------------------------------------------------------------------------------
 #
 #

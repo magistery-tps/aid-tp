@@ -1,0 +1,488 @@
+---
+title: 'Analisis inteligente de datos: Trabajo practico'
+author: "Adrian Norberto Marino"
+date: "2021/08/01"
+output:
+  html_document:
+    highlight: tango
+    theme: sandstone
+    df_print: paged
+    includes:
+      after_body: ./footer.html
+---
+
+<style>
+h1, .h1, h2, .h2, h3, .h3 {
+  margin-top: 64px;
+}
+.observations { 
+  background-color:#e6f0ff; 
+  border-color: #33ccff;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 5px; 
+  padding: 15px;
+}
+</style>
+
+<a href="https://github.com/magistery-tps/aid-tp" class="github-corner" aria-label="View source on GitHub" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+
+```{r, echo=TRUE}
+options(warn=-1)
+library(pacman)
+p_load(dplyr)
+source('../lib/import.R')
+#
+# Es una librería de funciones comunes desarrolladas a partir de este TP.
+import('../lib/common-lib.R')
+#
+# Funciones especificas para este TP.
+import('../scripts/helper_functions.R')
+```
+
+```{r, echo=TRUE}
+set.seed(1)
+```
+
+## 1. Cargamos el dataset
+
+1.1. Excluimos las columnas no numéricas que no nos interesan para este análisis.
+```{r, echo=TRUE}
+excluded_columns <- c(
+  'Neo.Reference.ID',
+  'Name',
+  'Close.Approach.Date',
+  'Epoch.Date.Close.Approach',
+  'Orbit.ID',
+  'Orbit.Determination.Date',
+  'Orbiting.Body',
+  'Est.Dia.in.Feet.min.',
+  'Est.Dia.in.Feet.max.',
+  'Est.Dia.in.M.min.',
+  'Est.Dia.in.M.max.',
+  'Est.Dia.in.KM.min.',
+  'Est.Dia.in.KM.max.',
+  'Equinox',
+  'Orbit.Uncertainity'
+)
+```
+
+## 1.2. Cargamos el dataset [nasa-asteroids](https://www.kaggle.com/shrutimehta/nasa-asteroids-classification) y
+excluirnos observaciones con valores faltaste.
+
+```{r}
+ds_step_1 <- loadcsv('../datasets/nasa.csv') %>% 
+  dplyr::select(-excluded_columns) %>%
+  na.omit
+
+str(ds_step_1)
+```
+
+
+## 2. Eliminamos las columnas que están altamente co-relacionadas
+
+Excluimos las columnas que tiene un correlación mayor al 80%.
+
+```{r}
+high_correlated_columns <- find_high_correlated_columns(
+  feat(ds_step_1), 
+  cutoff=0.8
+)
+length(high_correlated_columns)
+length(ds_step_1)
+
+ds_step_2 <- ds_step_1 %>% dplyr::select(-high_correlated_columns[-1])
+rm(ds_step_1)
+
+length(ds_step_2)
+```
+
+## 3. Tomamos las columnas que mejor separan las clases.
+
+Para realizar este paso vamos a utilizar la función `feature_importance` 
+del algoritmo Random Forest. Esta función nos permite comparar las variables 
+descuerdo a cuan buenas son para separa las clases. Luego tomaremos las 5
+variables que mejor separa la clases.
+
+```{r, echo=TRUE, fig.align='center'}
+result <- features_importance(ds_step_2, target = 'Hazardous')
+result
+
+plot_features_importance(result)
+
+n_best_features = 5
+# n_best_features = 15
+
+best_features <- top_acc_features(result, top=n_best_features)
+best_features
+length(best_features)
+
+ds_step_3 <- ds_step_2 %>% dplyr::select(c(best_features, c(Hazardous)))
+# rm(ds_step_2)
+```
+
+```{r}
+str(ds_step_3)
+```
+
+
+Ahora comparemos el resultado de  `feature_importance` con PCA.
+
+```{r, echo=TRUE, fig.align='center'}
+plot_pca_original_variables(feat(ds_step_3))
+```
+
+
+## 4. Transformamos las clases a números
+
+```{r}
+ds_step_4 <- ds_step_3 %>% 
+  mutate(Hazardous = case_when(Hazardous %in% c('True') ~ 1, TRUE ~ 0))
+
+str(ds_step_4)
+```
+
+
+## 5. Análisis Exploratorio
+
+### 5.1. Boxplot comparativos
+```{r, fig.align='center'}
+coparative_boxplot(feat(ds_step_4), to_col=n_best_features)
+```
+
+
+### 5.2. Histogramas y densidad
+
+```{r, fig.align='center'}
+comparative_histplot(feat(ds_step_4), to_col=n_best_features)
+```
+
+### 5.3. Analizamos gráfico de normalidad univariado
+
+```{r, echo=FALSE, fig.align='center'}
+comparative_qqplot(feat(ds_step_4), to_col=n_best_features)
+```
+**Observaciones**: Al parecer una sola variable parece ser normal.
+
+
+### 5.3. Test de normalidad uni-variado
+
+```{r}
+uni_shapiro_test(feat(ds_step_4))
+```
+
+**Observaciones**: En todos los casos el p-valor < 0.05 y se rechaza 
+normalidad en todas las variables. Esto coincido con los qqplot donde en 
+todos los casos no son normales salvo en una nunca variable donde parece 
+tender anormalidad.
+
+### 5.4. Test de normalidad muti-variado
+
+```{r}
+mult_shapiro_test(feat(ds_step_4))
+```
+**Observaciones**: El p-valore < 0.05 por lo tanto se rechaza normalidad 
+multi-variada. Se corresponde con el resultado del test de shapiro uni-variado
+pero no con el qqplot de cada variable. Entiendo que todos las variables se 
+acercan a una normal, pero no o son completamente.
+
+### 5.5. Test de homocedasticidad uni-variado
+
+```{r}
+uni_levene_test(feat(ds_step_4), ds_step_4$Hazardous)
+```
+
+**Observaciones**
+
+* Minimum.Orbit.Intersection: p-valor < 0.05 -> Rechaza homocedasticidad.
+* Absolute.Magnitude: p-valor < 0.05 -> Rechaza homocedasticidad.
+* Est.Dia.in.Miles.min.: p-valor > 0.05 -> No Rechaza homocedasticidad.
+* Perihelion.Distance: p-valor < 0.05 -> Rechaza homocedasticidad.
+* Inclination: p-valor > 0.05 -> No Rechaza homocedasticidad.
+
+### 5.6. Test de homocedasticidad multi-variado
+
+```{r}
+multi_boxm_test(feat(ds_step_4), ds_step_4$Hazardous)
+```
+
+**Observaciones**: El p-valor < 0.05 por lo tanto se rechaza la hipótesis 
+nula y podemos decir que las variables tiene no son homocedasticas.
+
+### 5.7. Correlaciones entre variables
+
+```{r, fig.align='center'}
+plot_correlations(feat(ds_step_4))
+```
+
+### 5.8. Análisis completo
+
+```{r, echo=FALSE, fig.align='center'}
+ggpairs(feat(ds_step_4), aes(colour = as.factor(ds_step_4$Hazardous), alpha = 0.4))
+```
+
+
+### 5.9. PCA: Comparación de variables originales con/sin la variable a predecir.
+
+```{r, echo=FALSE, fig.align='center'}
+plot_pca_original_variables(ds_step_4)
+```
+
+
+```{r, echo=FALSE, fig.align='center'}
+plot_pca_original_variables(feat(ds_step_4))
+```
+
+
+### 5.10. PCA: Con observaciones discriminadas pro clase. Primero quitamos 
+outliers para poder ver con mas claridad el biplot.
+
+```{r, fig.align='center'}
+ds_without_outliers <- filter_outliers(ds_step_4, max_score=0.52)
+plot_robust_pca(ds_without_outliers)
+```
+
+## 6. Train test split
+
+```{r}
+c(raw_train_set, raw_test_set) %<-% train_test_split(ds_step_4, train_size=.8)
+```
+
+## 7. Método [SMOTE](https://www.analyticsvidhya.com/blog/2021/04/smote-and-best-subset-selection-for-linear-regression-in-r) para balancear el dataset.
+
+```{r}
+# balanced_train_set <- smote_balance(raw_train_set, raw_train_set$Hazardous)
+#rm(raw_train_set)
+balanced_train_set <- raw_train_set
+```
+
+## 8. Escalamos las variables numéricas(Restamos la media y dividimos por el
+desvío).
+
+```{r}
+train_set <- balanced_train_set %>% 
+  mutate_at(vars(-Hazardous), ~(scale(.) %>% as.vector))
+test_set  <- raw_test_set %>% 
+  mutate_at(vars(-Hazardous), ~(scale(.) %>% as.vector))
+
+rm(balanced_train_set)
+rm(raw_test_set)
+```
+
+
+## 9. Entrenamos un modelo LDA
+
+```{r, fig.align='center'}
+reg_formula    <- formula(Hazardous~.)
+lda_model      <- lda(reg_formula, train_set)
+lda_test_pred  <- predict(lda_model, test_set)
+
+plot_cm(lda_test_pred$class, test_set$Hazardous)
+```
+
+
+```{r}
+graphics.off()
+plot_roc(lda_test_pred$class, test_set$Hazardous)
+```
+
+
+```{r}
+f_beta_score(lda_test_pred$class, test_set$Hazardous, beta=2)
+```
+
+```{r}
+lda_model$scaling
+```
+
+
+## 10. Entrenamos un modelo QDA
+
+```{r}
+qda_model      <- qda(reg_formula, train_set)
+qda_test_pred  <- predict(qda_model, test_set)
+
+plot_cm(qda_test_pred$class, test_set$Hazardous)
+```
+```{r}
+plot_roc(qda_test_pred$class, test_set$Hazardous)
+```
+
+
+```{r}
+f_beta_score(qda_test_pred$class, test_set$Hazardous, beta=2)
+```
+
+
+## 11. Entrenamos un modelo RDA
+
+```{r}
+rda_model      <- rda(reg_formula, train_set)
+rda_test_pred  <- predict(rda_model, test_set)
+
+plot_cm(rda_test_pred$class, test_set$Hazardous)
+```
+```{r}
+plot_roc(rda_test_pred$class, test_set$Hazardous)
+```
+
+
+```{r}
+f_beta_score(rda_test_pred$class, test_set$Hazardous, beta=2)
+```
+
+## 12.Entrenamos un modelo de regresión logística
+
+```{r}
+rl_model     <- glm(reg_formula, train_set, family=binomial)
+rl_test_pred <- predict(rl_model, test_set)
+
+rl_threshold <- 0.4
+rl_test_pred_threshold <- ifelse(rl_test_pred >= rl_threshold, 1, 0)
+
+plot_cm(rl_test_pred_threshold, test_set$Hazardous)
+```
+
+```{r}
+plot_roc(rl_test_pred_threshold, test_set$Hazardous)
+```
+
+
+```{r}
+f_beta_score(rl_test_pred_threshold, test_set$Hazardous, beta=2)
+```
+
+## 13. Entrenamos un modelo SVM
+
+```{r}
+svm_model     <- svm(reg_formula, train_set, kernel="radial")
+
+svm_test_pred <- predict(svm_model, test_set)
+svm_threshold <- 0.5
+svm_test_pred_threshold <- ifelse(svm_test_pred >= rl_threshold, 1, 0)
+
+plot_text_cm(svm_test_pred_threshold, test_set$Hazardous)
+```
+
+```{r}
+plot_roc(svm_test_pred_threshold, test_set$Hazardous)
+```
+
+
+```{r}
+f_beta_score(svm_test_pred_threshold, test_set$Hazardous, beta=2)
+```
+
+
+## 14. KMeans Clustering
+
+### 14.1. Primero definimos cuantos grupos utilizar.  
+
+Típica con estimadores de la normal.
+
+```{r}
+scaled_data_1 <- ds_step_4 %>%
+  dplyr::select(-Hazardous) %>%
+  mutate(~(scale(.) %>% as.vector))
+```
+
+Escalamiento diferente de la tipica normal.
+
+```{r}
+scaled_data_2 <- apply(
+  ds_step_4 %>% dplyr::select(-Hazardous), 
+  2, 
+  function(x) { (x - min(x)) / (max(x) - min(x))}
+)
+```
+
+```{r, fig.align='center'}
+clustering_metrics_plot(scaled_data_1)
+clustering_metrics_plot(scaled_data_2)
+```
+
+
+### 14.2. Kmeans
+
+```{r}
+n_clusters <- 2
+kmeans_model <- kmeans(scaled_data_1, n_clusters)
+
+km_ds_step_4 <- data.frame(ds_step_4)
+km_ds_step_4$kmeans <- kmeans_model$cluster
+```
+
+### 14.2. biplot
+
+```{r, fig.align='center'}
+ds_without_outliers <- filter_outliers(km_ds_step_4, max_score=0.5)
+plot_robust_pca(
+  ds_without_outliers %>% dplyr::select(-kmeans),
+  groups = factor(ds_without_outliers$kmeans),
+)
+```
+
+
+
+## 15. Hierarchical Clustering
+
+Matriz de distancias euclídeas 
+```{r}
+mat_dist <- dist(x = ds_step_4, method = "euclidean") 
+```
+
+
+Dendrogramas (según el tipo de segmentación jerárquica aplicada)  
+```{r}
+
+hc_complete <- hclust(d = mat_dist, method = "complete") 
+hc_average  <- hclust(d = mat_dist, method = "average")
+hc_single   <- hclust(d = mat_dist, method = "single")
+hc_ward     <- hclust(d = mat_dist, method = "ward.D2")
+```
+
+Calculo del coeficiente de correlación cofenetico
+
+```{r}
+cor(x = mat_dist, cophenetic(hc_complete))
+cor(x = mat_dist, cophenetic(hc_average))
+cor(x = mat_dist, cophenetic(hc_single))
+cor(x = mat_dist, cophenetic(hc_ward))
+```
+
+Construcción de un dendograma usando los resultados de la técnica de Ward
+```{r}
+n_clusters <- 6
+
+graphics.off()
+plot(hc_ward )
+rect.hclust(hc_ward, k=n_clusters, border="red")
+```
+
+```{r}
+hc_ds <- data.frame(ds_step_4)
+hc_ds$her_ward <- cutree(hc_ward, k=n_clusters)
+```
+
+```{r}
+ds_without_outliers <- filter_outliers(hc_ds, max_score=0.53)
+```
+
+```{r}
+plot_robust_pca(
+  ds_without_outliers %>% dplyr::select(-her_ward),
+  groups = factor(ds_without_outliers$her_ward),
+  colours=c("orange","cyan","blue","magenta","yellow","black"),
+  labels=c("grupo 1", "grupo 2","grupo 3","grupo 4","grupo 5","grupo 6")
+)
+```
+
+
+
+
+
+
+
+
+
