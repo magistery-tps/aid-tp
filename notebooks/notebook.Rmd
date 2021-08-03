@@ -2,7 +2,7 @@
 title: |
     | Maestría en Explotación de datos y Descubrimiento de conocimiento
     |
-    | Análisis inteligente de datos
+    | Materia: Análisis inteligente de datos
     |
     | Trabajo práctico: Asteroides Peligrosos
 author: "Adrian Norberto Marino"
