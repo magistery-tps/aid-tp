@@ -25,16 +25,35 @@ target <- function(df) df %>% pull(Hazardous)
 # argumento max_score. También permite visualizar un boxplot de la variable
 # score, para ver donde se puede poner el punto de corte.
 #
-filter_outliers <- function(df, max_score, plot_score_boxplot=TRUE) {
+filter_outliers_m1 <- function(df, max_score, plot_score_boxplot=TRUE) {
   tmp_df <- data.frame(df)
   tmp_df$score <- isolation_forest_scores(feat(tmp_df), plot=plot_score_boxplot)
   
   ds_without_outliers <- filter_by_score(tmp_df, max_score=max_score)
+
+  ds_without_outliers_percent <- nrow(ds_without_outliers) / nrow(df)
+  print(paste('Outliers:', round(1 - ds_without_outliers_percent, 2) * 100, '%'))
+  print(paste('Dataset without outliers:', round(ds_without_outliers_percent, 2) * 100, '%'))
   
   rm(tmp_df)
-  
+
   ds_without_outliers
 }
+
+
+filter_outliers_m2 <- function(df) {
+  outliers_index <- check_outliers(df)
+  
+  ds_without_outliers <- df[!outliers_index,]
+
+  ds_without_outliers_percent <- nrow(ds_without_outliers) / nrow(df)
+  print(paste('Outliers:', round(1 - ds_without_outliers_percent, 2) * 100, '%'))
+  print(paste('Dataset without outliers:', round(ds_without_outliers_percent, 2) * 100, '%'))
+
+  ds_without_outliers
+}
+
+
 #
 # Gráfica dos componentes principales(Las de mayor varianza)usando el método
 # robusto MVE para evitar outliers multi-variados.

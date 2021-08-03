@@ -8,6 +8,3 @@ p_load(MASS, stats, klaR, e1071, cluster, pracma, mvnormtest, xgboost)
 #
 #
 #
-mult_shapiro_test <- function(features) {
-  mshapiro.test(t(as.matrix(features)))
-}

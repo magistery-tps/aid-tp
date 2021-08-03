@@ -8,7 +8,7 @@ p_load(smotefamily)
 #
 #
 #
-smote_balance <- function(df, target, k=6) {
+smote_balance <- function(df, target, k=5) {
   result <- SMOTE(df, target, K=k)
   
   print(paste('Input:'))

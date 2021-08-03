@@ -2,7 +2,18 @@
 # Import dependencies
 # ------------------------------------------------------------------------------
 library(pacman)
-p_load(ROCit, cvms, pROC, cutpointr, Metrics, ggimage, rsvg)
+p_load(
+  ROCit, 
+  cvms, 
+  pROC,
+  cutpointr,
+  ggimage, 
+  rsvg, 
+  performance, 
+  see, 
+  qqplotr,
+  MLmetrics
+)
 # ------------------------------------------------------------------------------
 #
 #
@@ -12,12 +23,18 @@ p_load(ROCit, cvms, pROC, cutpointr, Metrics, ggimage, rsvg)
 #
 # Metrica F Beta score
 #
-f_beta_score <- function(prediction, reality, beta=1, show=TRUE) {
-  score <- fbeta_score(as.numeric(reality), as.numeric(prediction), beta=beta)
+fbeta_score <- function(prediction, reality, model="", positive=1, beta=1, show=TRUE) {
+  score <- FBeta_Score(
+    y_true   = reality,
+    y_pred   = prediction,
+    positive = positive, 
+    beta     = beta
+  )
+
   if(show) {
-    print(paste('F', beta, 'Score: ', score, sep=''))
+    print(paste(model, ' F', beta, 'Score: ', score, sep=''))
   } else {
-    score
+    score 
   }
 }
 
@@ -36,9 +53,10 @@ plot_roc <- function(predictions, reality) {
 # Grafica de la matriz de confusión.
 #
 plot_cm <- function(predictions, reality) {
-  plot_confusion_matrix(
-    confusion_matrix(targets=reality, prediction=predictions)
-  )
+  cm <- confusion_matrix(targets=reality, prediction=predictions)
+  
+  print(cm)
+  plot_confusion_matrix(cm)
 }
 
 

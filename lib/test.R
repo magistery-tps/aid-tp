@@ -39,21 +39,3 @@ uni_shapiro_test <- function(features) {
     }
   )
 }
-
-#
-# Test de homocedaticidad uni-variado. Calcula el test de homocedaticidad 
-# para cada columna del dataframe pasado como argumento.
-#
-uni_levene_test <- function(features, target) {
-  r <- foreach_col(
-    features, 
-    function(features, col_index) {
-      print(paste('=> Variable: ', colnames(features)[col_index], sep=''))
-      print('')
-      r <- leveneTest(features[, col_index], target)
-      print(r)
-      print('')
-      print('')
-    }
-  )
-}

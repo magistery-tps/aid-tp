@@ -28,8 +28,8 @@ h1, .h1, h2, .h2, h3, .h3 {
 <a href="https://github.com/magistery-tps/aid-tp" class="github-corner" aria-label="View source on GitHub" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
 
 
-```{r, echo=TRUE}
-options(warn=-1)
+```{r, echo=TRUE, include=TRUE}
+options(warn=-2)
 library(pacman)
 p_load(dplyr)
 source('../lib/import.R')
@@ -131,44 +131,54 @@ rm(ds_step_2)
 str(ds_step_3)
 ```
 
-
-## 4. Transformamos la varaible a predecir a tipo numericas
+## 4. Filtramos outliers
 
 ```{r}
-ds_step_4 <- ds_step_3 %>% 
+# ds_step_4 <- filter_outliers_m1(ds_step_3, max_score = 0.51)
+ds_step_4 <- filter_outliers_m2(ds_step_3)
+
+rm(ds_step_3)
+```
+
+
+## 5. Transformamos la varaible a predecir a tipo numericas
+
+```{r}
+ds_step_5 <- ds_step_4 %>% 
   mutate(Hazardous = case_when(Hazardous %in% c('True') ~ 1, TRUE ~ 0))
 
-str(ds_step_4)
+rm(ds_step_4)
+str(ds_step_5)
 ```
 
 
-## 5. Análisis Exploratorio
+## 6. Análisis Exploratorio
 
-### 5.1. Boxplot comparativos
+### 6.1. Boxplot comparativos
 ```{r, fig.align='center'}
-coparative_boxplot(feat(ds_step_4), to_col=n_best_features)
+coparative_boxplot(feat(ds_step_5), to_col=n_best_features)
 ```
 
 
-### 5.2. Histogramas y densidad
+### 6.2. Histogramas y densidad
 
 ```{r, fig.align='center'}
-comparative_histplot(feat(ds_step_4), to_col=n_best_features)
+comparative_histplot(feat(ds_step_5), to_col=n_best_features)
 ```
 
-### 5.3. Analizamos gráfico de normalidad univariado
+### 6.3. Analizamos gráfico de normalidad univariado
 
 ```{r, echo=FALSE, fig.align='center'}
-comparative_qqplot(feat(ds_step_4), to_col=n_best_features)
+comparative_qqplot(feat(ds_step_5), to_col=n_best_features)
 ```
 **Observaciones**: Al parecer  solo Perihelion.Distance parece ser normal 
 o por lo enos la mas nromal de todas.
 
 
-### 5.3. Test de normalidad uni-variado
+### 6.3. Test de normalidad uni-variado
 
 ```{r}
-uni_shapiro_test(feat(ds_step_4))
+uni_shapiro_test(feat(ds_step_5))
 ```
 
 **Observaciones**: En todos los casos el p-valor < 0.05 y se rechaza 
@@ -176,87 +186,76 @@ normalidad en todas las variables. Esto coincido con los qqplot donde en
 todos los casos no son normales salvo Perihelion.Distance que parece 
 tender anormalidad.
 
-### 5.4. Test de normalidad muti-variado
+### 6.4. Test de normalidad muti-variado
 
 ```{r}
-mult_shapiro_test(feat(ds_step_4))
+mult_shapiro_test(feat(ds_step_5))
 ```
 **Observaciones**: El p-valore < 0.05 por lo tanto se rechaza normalidad 
 multi-variada. Se corresponde con el resultado de los tests de shapiro uni-variados
 y los qqplot's.
 
 
-### 5.5. Test de homocedasticidad uni-variado
-
-
-```{r}
-uni_levene_test(feat(ds_step_4), ds_step_4$Hazardous)
-```
-
-**Observaciones**
-
-Si testeamos homocedatisidad entre cada variable y la varuabkle target encontramos que:
-
-* Minimum.Orbit.Intersection: p-valor < 0.05 -> Rechaza homocedasticidad.
-* Absolute.Magnitude: p-valor < 0.05 -> Rechaza homocedasticidad.
-* Est.Dia.in.Miles.min.: p-valor > 0.05 -> No Rechaza homocedasticidad.
-* Perihelion.Distance: p-valor < 0.05 -> Rechaza homocedasticidad.
-* Inclination: p-valor > 0.05 -> No Rechaza homocedasticidad.
-
-Por lo tanto solo Est.Dia.in.Miles.min. parece tener varianza simialr con 
-la variable target(Hazardous).
-
-
-### 5.6. Test de homocedasticidad multi-variado
+### 6.5. Test de homocedasticidad multi-variado
 
 ```{r}
-multi_boxm_test(feat(ds_step_4), ds_step_4$Hazardous)
+multi_boxm_test(feat(ds_step_5), ds_step_5$Hazardous)
 ```
 
 **Observaciones**: El p-valor < 0.05 por lo tanto se rechaza la hipótesis 
-nula y podemos decir que las variablesno son homocedasticas.
+nula y podemos decir que las variables no son homocedasticas.
 
 
-### 5.7. Correlaciones entre variables
+### 6.6. Correlaciones entre variables
 
 ```{r, fig.align='center'}
-plot_correlations(feat(ds_step_4))
+plot_correlations(feat(ds_step_5))
 ```
 
-### 5.8. Análisis completo
+### 6.7. Análisis completo
 
 ```{r, echo=FALSE, fig.align='center'}
-ggpairs(feat(ds_step_4), aes(colour = as.factor(ds_step_4$Hazardous), alpha = 0.4))
+ggpairs(feat(ds_step_5), aes(colour = as.factor(ds_step_5$Hazardous), alpha = 0.4))
 ```
 
 
-### 5.9. PCA: Comparación de variables originales con/sin la variable a predecir.
+### 6.8. PCA: Comparación de variables originales con/sin la variable a predecir.
 
 ```{r, echo=FALSE, fig.align='center'}
-plot_pca_original_variables(ds_step_4)
+plot_pca_original_variables(ds_step_5)
 ```
 
 
 ```{r, echo=FALSE, fig.align='center'}
-plot_pca_original_variables(feat(ds_step_4))
+plot_pca_original_variables(feat(ds_step_5))
 ```
 
 
-### 5.10. PCA: Con observaciones discriminadas pro clase. Primero quitamos 
+### 6.9. PCA: Con observaciones discriminadas pro clase. Primero quitamos 
 outliers para poder ver con mas claridad el biplot.
 
+
 ```{r, fig.align='center'}
-ds_without_outliers <- filter_outliers(ds_step_4, max_score=0.52)
-plot_robust_pca(ds_without_outliers)
+plot_robust_pca(ds_step_5)
 ```
 
-## 6. Train test split
+
+## 7. Train test split
+
+Partimos el dataset en los conjuntos de entrenamiento y prueba. Ademas 
+antes de partimos ordenamos las observaciones aleatoriamente para que 
+los modelos de clasificación no aprendan secuencia si es que existe 
+alguna en el orden original.
 
 ```{r}
-c(raw_train_set, raw_test_set) %<-% train_test_split(ds_step_4, train_size=.8)
+c(raw_train_set, raw_test_set) %<-% train_test_split(
+  ds_step_5, 
+  train_size = .8, 
+  shuffle    = TRUE
+)
 ```
 
-## 7. Método [SMOTE](https://www.analyticsvidhya.com/blog/2021/04/smote-and-best-subset-selection-for-linear-regression-in-r) para balancear el dataset.
+## 8. Método [SMOTE](https://www.analyticsvidhya.com/blog/2021/04/smote-and-best-subset-selection-for-linear-regression-in-r) para balancear el dataset.
 
 ```{r}
 # balanced_train_set <- smote_balance(raw_train_set, raw_train_set$Hazardous)
@@ -264,8 +263,9 @@ c(raw_train_set, raw_test_set) %<-% train_test_split(ds_step_4, train_size=.8)
 balanced_train_set <- raw_train_set
 ```
 
-## 8. Escalamos las variables numéricas(Restamos la media y dividimos por el
-desvío).
+## 9. Escalamos las variables numéricas
+
+Restamos la media y dividimos por el desvío.
 
 ```{r}
 train_set <- balanced_train_set %>% 
@@ -277,10 +277,10 @@ rm(balanced_train_set)
 rm(raw_test_set)
 ```
 
-## 9. Clasificacion
+## 10. Clasificacion
 
 
-### 9.1. Entrenamos un modelo LDA
+### 10.1. Entrenamos un modelo LDA
 
 ```{r, fig.align='center'}
 lda_model      <- lda(formula(Hazardous~.), train_set)
@@ -298,7 +298,7 @@ plot_roc(lda_test_pred$class, target(test_set))
 ```
 
 ```{r}
-f_beta_score(lda_test_pred$class, target(test_set), beta=2)
+fbeta_score(prediction=lda_test_pred$class, reality=target(test_set), beta=2)
 ```
 
 ```{r}
@@ -306,7 +306,7 @@ lda_model$scaling
 ```
 
 
-### 9.2. Entrenamos un modelo QDA
+### 10.2. Entrenamos un modelo QDA
 
 ```{r}
 qda_model      <- qda(formula(Hazardous~.), train_set)
@@ -318,18 +318,16 @@ qda_test_pred  <- predict(qda_model, feat(test_set))
 plot_cm(qda_test_pred$class, target(test_set))
 ```
 
-
 ```{r}
 plot_roc(qda_test_pred$class, target(test_set))
 ```
 
 
 ```{r}
-f_beta_score(qda_test_pred$class, target(test_set), beta=2)
+fbeta_score(prediction=qda_test_pred$class, reality=target(test_set), beta=2)
 ```
 
-
-### 9.3. Entrenamos un modelo RDA
+### 10.3. Entrenamos un modelo RDA
 
 ```{r}
 rda_model      <- rda(formula(Hazardous~.), train_set)
@@ -348,41 +346,44 @@ plot_roc(rda_test_pred$class, target(test_set))
 
 
 ```{r}
-f_beta_score(rda_test_pred$class, target(test_set), beta=2)
+fbeta_score(prediction=rda_test_pred$class, reality=target(test_set), beta=2)
 ```
 
-### 9.4. Entrenamos un modelo de regresión logística
+### 10.4. Entrenamos un modelo de regresión logística
 
 ```{r}
-rl_model <- glm(formula(Hazardous~.), train_set, family=binomial)
+lr_model <- glm(formula(Hazardous~.), train_set, family=binomial)
 
-rl_test_pred <- predict(rl_model, test_set)
-rl_test_pred_threshold <- ifelse(rl_test_pred >= 0.01, 1, 0)
-```
-
-
-```{r}
-plot_cm(rl_test_pred_threshold, target(test_set))
-```
-
-
-
-```{r}
-plot_roc(rl_test_pred_threshold, target(test_set))
+lr_test_pred <- predict(lr_model, test_set)
+lr_threshold <- 0.01
+lr_test_pred_threshold <- ifelse(lr_test_pred >= lr_threshold, 1, 0)
 ```
 
 
 ```{r}
-f_beta_score(rl_test_pred_threshold, target(test_set), beta=2)
+plot_cm(lr_test_pred_threshold, target(test_set))
 ```
 
-### 9.5. Entrenamos un modelo SVM
+
+
+```{r}
+plot_roc(lr_test_pred_threshold, target(test_set))
+```
+
+
+```{r}
+fbeta_score(lr_test_pred_threshold, target(test_set), beta=2)
+```
+
+
+### 10.5. Entrenamos un modelo SVM
 
 ```{r}
 svm_model <- svm(formula(Hazardous~.), train_set, kernel = 'radial')
 
 svm_test_pred <- predict(svm_model, test_set)
-svm_test_pred_threshold <- ifelse(svm_test_pred >= 0.20, 1, 0)
+svm_threshold <- 0.20
+svm_test_pred_threshold <- ifelse(svm_test_pred >= svm_threshold, 1, 0)
 ```
 
 
@@ -395,31 +396,32 @@ plot_cm(svm_test_pred_threshold, target(test_set))
 plot_roc(svm_test_pred_threshold, target(test_set))
 ```
 
-
 ```{r}
-f_beta_score(svm_test_pred_threshold, target(test_set), beta=2)
+fbeta_score(svm_test_pred_threshold, target(test_set), beta=2)
 ```
 
-
-### 9.6. Entrenamos un modelo XGBoost
-
+### 10.6. Entrenamos un modelo XGBoost
 
 
-```{r}
+
+```{r, include=TRUE}
 xgboost_model <- xgboost(
  as.matrix(feat(train_set)), 
  target(train_set),
- eta = 0.1,
- max_depth = 10, 
- nround=5000, 
- objective = "binary:logistic",
- nthread = 24
+ eta         = 0.2,
+ max_depth   = 20,
+ nround      = 15000,
+ eval_metric = 'logloss',
+ objective   = "binary:logistic",
+ nthread     = 24,
+ verbose     = 0
 )
 ```
 
 ```{r}
 xgb_test_pred <- predict(xgboost_model, as.matrix(feat(test_set)))
-xgb_test_pred_threshold <- ifelse(xgb_test_pred >= 0.1, 1, 0)
+xgb_threshold <- 0.1
+xgb_test_pred_threshold <- ifelse(xgb_test_pred >= xgb_threshold, 1, 0)
 
 plot_cm(xgb_test_pred_threshold, target(test_set))
 ```
@@ -429,49 +431,95 @@ plot_roc(xgb_test_pred_threshold, target(test_set))
 ```
 
 ```{r}
-f_beta_score(xgb_test_pred_threshold, target(test_set), beta=2)
+fbeta_score(xgb_test_pred_threshold, target(test_set), beta=2)
 ```
 
-## 10. KMeans Clustering
 
-### 10.1. Primero definimos cuantos grupos utilizar.  
+
+
+### 10.7. Comparativa de metricas
+
+
+```{r}
+data.frame(
+  F2Score = c(
+    fbeta_score(lda_test_pred$class,     target(test_set), beta=2, show=F),
+    fbeta_score(qda_test_pred$class,     target(test_set), beta=2, show=F),
+    fbeta_score(rda_test_pred$class,     target(test_set), beta=2, show=F),
+    fbeta_score(lr_test_pred_threshold,  target(test_set), beta=2, show=F),
+    fbeta_score(svm_test_pred_threshold, target(test_set), beta=2, show=F),
+    fbeta_score(xgb_test_pred_threshold, target(test_set), beta=2, show=F)
+  ),
+  Model = c(
+    'LDA', 
+    'QDA', 
+    'RDA', 
+    'Regresion Logistica',
+    'SVM',
+    'XGBoost'
+  ),
+  Umbral = c(
+    NA, 
+    NA, 
+    NA, 
+    lr_threshold,
+    svm_threshold,
+    xgb_threshold
+  )
+) %>%  arrange(desc(F2Score))
+```
+
+
+
+## 11. KMeans Clustering
+
+### 11.1. Primero definimos cuantos grupos utilizar.  
 
 Típica con estimadores de la normal.
 
 ```{r}
-scaled_data_1 <- feat(ds_step_4) %>% mutate(~(scale(.) %>% as.vector))
+scaled_data_1 <- feat(ds_step_5) %>% mutate(~(scale(.) %>% as.vector))
+```
+
+```{r, fig.align='center'}
+clustering_metrics_plot(scaled_data_1)
 ```
 
 Escalamiento diferente de la típica normal.
 
 ```{r}
 scaled_data_2 <- apply(
-  feat(ds_step_4), 
+  feat(ds_step_5), 
   2, 
   function(x) { (x - min(x)) / (max(x) - min(x))}
 )
 ```
 
 ```{r, fig.align='center'}
-clustering_metrics_plot(scaled_data_1)
 clustering_metrics_plot(scaled_data_2)
 ```
 
 
-### 10.2. Kmeans
+### 11.2. Kmeans
 
 ```{r}
 n_clusters <- 2
 kmeans_model <- kmeans(scaled_data_1, n_clusters)
 
-km_ds_step_4 <- data.frame(ds_step_4)
-km_ds_step_4$kmeans <- kmeans_model$cluster
+km_ds_step_5 <- data.frame(ds_step_5)
+km_ds_step_5$kmeans <- kmeans_model$cluster
 ```
 
 ### 10.2. biplot
 
+
+```{r}
+# ds_without_outliers <- filter_outliers_m1(km_ds_step_5, max_score=0.5)
+ds_without_outliers <- filter_outliers_m2(km_ds_step_5)
+```
+
+
 ```{r, fig.align='center'}
-ds_without_outliers <- filter_outliers(km_ds_step_4, max_score=0.5)
 plot_robust_pca(
   ds_without_outliers %>% dplyr::select(-kmeans),
   groups = factor(ds_without_outliers$kmeans),
@@ -480,11 +528,11 @@ plot_robust_pca(
 
 
 
-## 10.3 Hierarchical Clustering
+## 11.3 Hierarchical Clustering
 
 Matriz de distancias euclídeas 
 ```{r}
-mat_dist <- dist(x = ds_step_4, method = "euclidean") 
+mat_dist <- dist(x = ds_step_5, method = "euclidean") 
 ```
 
 
@@ -516,12 +564,13 @@ rect.hclust(hc_ward, k=n_clusters, border="red")
 ```
 
 ```{r}
-hc_ds <- data.frame(ds_step_4)
+hc_ds <- data.frame(ds_step_5)
 hc_ds$her_ward <- cutree(hc_ward, k=n_clusters)
 ```
 
 ```{r}
-ds_without_outliers <- filter_outliers(hc_ds, max_score=0.57)
+# ds_without_outliers <- filter_outlier_m1(hc_ds, max_score=0.57)
+ds_without_outliers <- filter_outliers_m2(hc_ds)
 ```
 
 ```{r}
