@@ -1,8 +1,8 @@
-# Maestria en Explotación de datos y Descubrimiento de conocimiento
+## Maestria en Explotación de datos y Descubrimiento de conocimiento
 
-## Materia: Analisis inteligente de datos
+### Materia: Analisis inteligente de datos
 
-## Trabajo práctico: Asteroides Peligrosos
+### Trabajo práctico: Asteroides Peligrosos
 
 * [Informe]()
 * [Resolución](https://rpubs.com/adrianmarino/aid-tp)
