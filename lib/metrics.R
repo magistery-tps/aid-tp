@@ -54,8 +54,6 @@ plot_roc <- function(predictions, reality) {
 #
 plot_cm <- function(predictions, reality) {
   cm <- confusion_matrix(targets=reality, prediction=predictions)
-  
-  print(cm)
   plot_confusion_matrix(cm)
 }
 

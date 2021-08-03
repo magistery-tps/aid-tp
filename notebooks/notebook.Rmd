@@ -1,5 +1,10 @@
 ---
-title: 'Analisis inteligente de datos: Trabajo practico'
+title: |
+    | Maestría en Explotación de datos y Descubrimiento de conocimiento
+    |
+    | Análisis inteligente de datos
+    |
+    | Trabajo práctico: Asteroides Peligrosos
 author: "Adrian Norberto Marino"
 date: "2021/08/01"
 output:
@@ -282,18 +287,18 @@ rm(raw_test_set)
 
 ### 10.1. Entrenamos un modelo LDA
 
-```{r, fig.align='center'}
+```{r}
 lda_model      <- lda(formula(Hazardous~.), train_set)
 lda_test_pred  <- predict(lda_model, feat(test_set))
 ```
 
 
-```{r}
+```{r, fig.align='center'}
 plot_cm(lda_test_pred$class, target(test_set))
 ```
 
 
-```{r}
+```{r, fig.align='center'}
 plot_roc(lda_test_pred$class, target(test_set))
 ```
 
@@ -314,11 +319,11 @@ qda_test_pred  <- predict(qda_model, feat(test_set))
 ```
 
 
-```{r}
+```{r, fig.align='center'}
 plot_cm(qda_test_pred$class, target(test_set))
 ```
 
-```{r}
+```{r, fig.align='center'}
 plot_roc(qda_test_pred$class, target(test_set))
 ```
 
@@ -334,13 +339,13 @@ rda_model      <- rda(formula(Hazardous~.), train_set)
 rda_test_pred  <- predict(rda_model, test_set)
 ```
 
-```{r}
+```{r, fig.align='center'}
 plot_cm(rda_test_pred$class, target(test_set))
 ```
 
 
 
-```{r}
+```{r, fig.align='center'}
 plot_roc(rda_test_pred$class, target(test_set))
 ```
 
@@ -360,13 +365,13 @@ lr_test_pred_threshold <- ifelse(lr_test_pred >= lr_threshold, 1, 0)
 ```
 
 
-```{r}
+```{r, fig.align='center'}
 plot_cm(lr_test_pred_threshold, target(test_set))
 ```
 
 
 
-```{r}
+```{r, fig.align='center'}
 plot_roc(lr_test_pred_threshold, target(test_set))
 ```
 
@@ -387,12 +392,12 @@ svm_test_pred_threshold <- ifelse(svm_test_pred >= svm_threshold, 1, 0)
 ```
 
 
-```{r}
+```{r, fig.align='center'}
 plot_cm(svm_test_pred_threshold, target(test_set))
 ```
 
 
-```{r}
+```{r, fig.align='center'}
 plot_roc(svm_test_pred_threshold, target(test_set))
 ```
 
@@ -418,7 +423,7 @@ xgboost_model <- xgboost(
 )
 ```
 
-```{r}
+```{r, fig.align='center'}
 xgb_test_pred <- predict(xgboost_model, as.matrix(feat(test_set)))
 xgb_threshold <- 0.1
 xgb_test_pred_threshold <- ifelse(xgb_test_pred >= xgb_threshold, 1, 0)
@@ -426,7 +431,7 @@ xgb_test_pred_threshold <- ifelse(xgb_test_pred >= xgb_threshold, 1, 0)
 plot_cm(xgb_test_pred_threshold, target(test_set))
 ```
 
-```{r}
+```{r, fig.align='center'}
 plot_roc(xgb_test_pred_threshold, target(test_set))
 ```
 
@@ -555,7 +560,7 @@ cor(x = mat_dist, cophenetic(hc_ward))
 ```
 
 Construcción de un dendograma usando los resultados de la técnica de Ward
-```{r}
+```{r, fig.align='center'}
 n_clusters <- 2
 
 graphics.off()
@@ -573,7 +578,7 @@ hc_ds$her_ward <- cutree(hc_ward, k=n_clusters)
 ds_without_outliers <- filter_outliers_m2(hc_ds)
 ```
 
-```{r}
+```{r, fig.align='center'}
 plot_robust_pca(
   ds_without_outliers %>% dplyr::select(-her_ward),
   groups = factor(ds_without_outliers$her_ward),
@@ -582,9 +587,6 @@ plot_robust_pca(
 )
 ```
 
-```{r}
-plot_robust_pca(ds_without_outliers)
-```
 
 
 
