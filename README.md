@@ -1,6 +1,6 @@
 # Maestria en Explotación de datos y Descubrimiento de conocimiento
 
-## Analisis inteligente de datos
+## Materia: Analisis inteligente de datos
 
 ## Trabajo práctico: Asteroides Peligrosos
 
