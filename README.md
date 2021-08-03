@@ -1,3 +1,8 @@
-# Analisis inteligente de datos: Trabajo practico
+# Maestria en Explotación de datos y Descubrimiento de conocimiento
 
-* [Notebook](https://rpubs.com/adrianmarino/aid-tp)
+## Analisis inteligente de datos
+
+## Trabajo práctico: Asteroides Peligrosos
+
+* [Informe]()
+* [Resolución](https://rpubs.com/adrianmarino/aid-tp)
