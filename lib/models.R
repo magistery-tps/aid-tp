@@ -2,7 +2,7 @@
 # Import dependencies
 # ------------------------------------------------------------------------------
 library(pacman)
-p_load(MASS, stats, klaR, e1071, cluster, pracma, mvnormtest)
+p_load(MASS, stats, klaR, e1071, cluster, pracma, mvnormtest, xgboost)
 # ------------------------------------------------------------------------------
 #
 #

@@ -47,7 +47,16 @@ set.seed(1)
 
 ## 1. Cargamos el dataset
 
-1.1. Excluimos las columnas no numéricas que no nos interesan para este análisis.
+
+### 1.1. Cargamos el dataset [nasa-asteroids](https://www.kaggle.com/shrutimehta/nasa-asteroids-classification) y excluirnos observaciones con valores faltaste.
+
+```{r}
+dataset <- loadcsv('../datasets/nasa.csv')
+str(dataset)
+```
+
+### 1.2. Las siguientes columnas las excluimos ya sea por que son no numerica, o colineales con las columna que si son parte de nuestro analisis.
+
 ```{r, echo=TRUE}
 excluded_columns <- c(
   'Neo.Reference.ID',
@@ -66,36 +75,31 @@ excluded_columns <- c(
   'Equinox',
   'Orbit.Uncertainity'
 )
-```
 
-## 1.2. Cargamos el dataset [nasa-asteroids](https://www.kaggle.com/shrutimehta/nasa-asteroids-classification) y
-excluirnos observaciones con valores faltaste.
-
-```{r}
-ds_step_1 <- loadcsv('../datasets/nasa.csv') %>% 
-  dplyr::select(-excluded_columns) %>%
-  na.omit
+ds_step_1 <- dataset %>% dplyr::select(-excluded_columns) %>% na.omit
+rm(dataset)
 
 str(ds_step_1)
 ```
 
-
 ## 2. Eliminamos las columnas que están altamente co-relacionadas
 
-Excluimos las columnas que tiene un correlación mayor al 80%.
+Excluimos las columnas que tienen un correlación mayor al 80%. 
+Del grupo altamenten correlacionesdos nos quedamos con una sola variable ya 
+que todas con muy simialres.
 
 ```{r}
 high_correlated_columns <- find_high_correlated_columns(
   feat(ds_step_1), 
   cutoff=0.8
 )
-length(high_correlated_columns)
-length(ds_step_1)
+
+print(high_correlated_columns)
 
 ds_step_2 <- ds_step_1 %>% dplyr::select(-high_correlated_columns[-1])
-rm(ds_step_1)
 
-length(ds_step_2)
+rm(ds_step_1)
+str(ds_step_2)
 ```
 
 ## 3. Tomamos las columnas que mejor separan las clases.
@@ -103,7 +107,7 @@ length(ds_step_2)
 Para realizar este paso vamos a utilizar la función `feature_importance` 
 del algoritmo Random Forest. Esta función nos permite comparar las variables 
 descuerdo a cuan buenas son para separa las clases. Luego tomaremos las 5
-variables que mejor separa la clases.
+variables que mejor separa las clases.
 
 ```{r, echo=TRUE, fig.align='center'}
 result <- features_importance(ds_step_2, target = 'Hazardous')
@@ -119,7 +123,8 @@ best_features
 length(best_features)
 
 ds_step_3 <- ds_step_2 %>% dplyr::select(c(best_features, c(Hazardous)))
-# rm(ds_step_2)
+
+rm(ds_step_2)
 ```
 
 ```{r}
@@ -127,14 +132,7 @@ str(ds_step_3)
 ```
 
 
-Ahora comparemos el resultado de  `feature_importance` con PCA.
-
-```{r, echo=TRUE, fig.align='center'}
-plot_pca_original_variables(feat(ds_step_3))
-```
-
-
-## 4. Transformamos las clases a números
+## 4. Transformamos la varaible a predecir a tipo numericas
 
 ```{r}
 ds_step_4 <- ds_step_3 %>% 
@@ -163,7 +161,8 @@ comparative_histplot(feat(ds_step_4), to_col=n_best_features)
 ```{r, echo=FALSE, fig.align='center'}
 comparative_qqplot(feat(ds_step_4), to_col=n_best_features)
 ```
-**Observaciones**: Al parecer una sola variable parece ser normal.
+**Observaciones**: Al parecer  solo Perihelion.Distance parece ser normal 
+o por lo enos la mas nromal de todas.
 
 
 ### 5.3. Test de normalidad uni-variado
@@ -174,7 +173,7 @@ uni_shapiro_test(feat(ds_step_4))
 
 **Observaciones**: En todos los casos el p-valor < 0.05 y se rechaza 
 normalidad en todas las variables. Esto coincido con los qqplot donde en 
-todos los casos no son normales salvo en una nunca variable donde parece 
+todos los casos no son normales salvo Perihelion.Distance que parece 
 tender anormalidad.
 
 ### 5.4. Test de normalidad muti-variado
@@ -183,11 +182,12 @@ tender anormalidad.
 mult_shapiro_test(feat(ds_step_4))
 ```
 **Observaciones**: El p-valore < 0.05 por lo tanto se rechaza normalidad 
-multi-variada. Se corresponde con el resultado del test de shapiro uni-variado
-pero no con el qqplot de cada variable. Entiendo que todos las variables se 
-acercan a una normal, pero no o son completamente.
+multi-variada. Se corresponde con el resultado de los tests de shapiro uni-variados
+y los qqplot's.
+
 
 ### 5.5. Test de homocedasticidad uni-variado
+
 
 ```{r}
 uni_levene_test(feat(ds_step_4), ds_step_4$Hazardous)
@@ -195,11 +195,17 @@ uni_levene_test(feat(ds_step_4), ds_step_4$Hazardous)
 
 **Observaciones**
 
+Si testeamos homocedatisidad entre cada variable y la varuabkle target encontramos que:
+
 * Minimum.Orbit.Intersection: p-valor < 0.05 -> Rechaza homocedasticidad.
 * Absolute.Magnitude: p-valor < 0.05 -> Rechaza homocedasticidad.
 * Est.Dia.in.Miles.min.: p-valor > 0.05 -> No Rechaza homocedasticidad.
 * Perihelion.Distance: p-valor < 0.05 -> Rechaza homocedasticidad.
 * Inclination: p-valor > 0.05 -> No Rechaza homocedasticidad.
+
+Por lo tanto solo Est.Dia.in.Miles.min. parece tener varianza simialr con 
+la variable target(Hazardous).
+
 
 ### 5.6. Test de homocedasticidad multi-variado
 
@@ -208,7 +214,8 @@ multi_boxm_test(feat(ds_step_4), ds_step_4$Hazardous)
 ```
 
 **Observaciones**: El p-valor < 0.05 por lo tanto se rechaza la hipótesis 
-nula y podemos decir que las variables tiene no son homocedasticas.
+nula y podemos decir que las variablesno son homocedasticas.
+
 
 ### 5.7. Correlaciones entre variables
 
@@ -270,26 +277,28 @@ rm(balanced_train_set)
 rm(raw_test_set)
 ```
 
+## 9. Clasificacion
 
-## 9. Entrenamos un modelo LDA
+
+### 9.1. Entrenamos un modelo LDA
 
 ```{r, fig.align='center'}
-reg_formula    <- formula(Hazardous~.)
-lda_model      <- lda(reg_formula, train_set)
-lda_test_pred  <- predict(lda_model, test_set)
-
-plot_cm(lda_test_pred$class, test_set$Hazardous)
+lda_model      <- lda(formula(Hazardous~.), train_set)
+lda_test_pred  <- predict(lda_model, feat(test_set))
 ```
 
 
 ```{r}
-graphics.off()
-plot_roc(lda_test_pred$class, test_set$Hazardous)
+plot_cm(lda_test_pred$class, target(test_set))
 ```
 
 
 ```{r}
-f_beta_score(lda_test_pred$class, test_set$Hazardous, beta=2)
+plot_roc(lda_test_pred$class, target(test_set))
+```
+
+```{r}
+f_beta_score(lda_test_pred$class, target(test_set), beta=2)
 ```
 
 ```{r}
@@ -297,101 +306,147 @@ lda_model$scaling
 ```
 
 
-## 10. Entrenamos un modelo QDA
+### 9.2. Entrenamos un modelo QDA
 
 ```{r}
-qda_model      <- qda(reg_formula, train_set)
-qda_test_pred  <- predict(qda_model, test_set)
-
-plot_cm(qda_test_pred$class, test_set$Hazardous)
-```
-```{r}
-plot_roc(qda_test_pred$class, test_set$Hazardous)
+qda_model      <- qda(formula(Hazardous~.), train_set)
+qda_test_pred  <- predict(qda_model, feat(test_set))
 ```
 
 
 ```{r}
-f_beta_score(qda_test_pred$class, test_set$Hazardous, beta=2)
+plot_cm(qda_test_pred$class, target(test_set))
 ```
 
 
-## 11. Entrenamos un modelo RDA
+```{r}
+plot_roc(qda_test_pred$class, target(test_set))
+```
+
 
 ```{r}
-rda_model      <- rda(reg_formula, train_set)
+f_beta_score(qda_test_pred$class, target(test_set), beta=2)
+```
+
+
+### 9.3. Entrenamos un modelo RDA
+
+```{r}
+rda_model      <- rda(formula(Hazardous~.), train_set)
 rda_test_pred  <- predict(rda_model, test_set)
-
-plot_cm(rda_test_pred$class, test_set$Hazardous)
-```
-```{r}
-plot_roc(rda_test_pred$class, test_set$Hazardous)
 ```
 
-
 ```{r}
-f_beta_score(rda_test_pred$class, test_set$Hazardous, beta=2)
+plot_cm(rda_test_pred$class, target(test_set))
 ```
 
-## 12.Entrenamos un modelo de regresión logística
+
 
 ```{r}
-rl_model     <- glm(reg_formula, train_set, family=binomial)
+plot_roc(rda_test_pred$class, target(test_set))
+```
+
+
+```{r}
+f_beta_score(rda_test_pred$class, target(test_set), beta=2)
+```
+
+### 9.4. Entrenamos un modelo de regresión logística
+
+```{r}
+rl_model <- glm(formula(Hazardous~.), train_set, family=binomial)
+
 rl_test_pred <- predict(rl_model, test_set)
-
-rl_threshold <- 0.4
-rl_test_pred_threshold <- ifelse(rl_test_pred >= rl_threshold, 1, 0)
-
-plot_cm(rl_test_pred_threshold, test_set$Hazardous)
-```
-
-```{r}
-plot_roc(rl_test_pred_threshold, test_set$Hazardous)
+rl_test_pred_threshold <- ifelse(rl_test_pred >= 0.01, 1, 0)
 ```
 
 
 ```{r}
-f_beta_score(rl_test_pred_threshold, test_set$Hazardous, beta=2)
+plot_cm(rl_test_pred_threshold, target(test_set))
 ```
 
-## 13. Entrenamos un modelo SVM
+
 
 ```{r}
-svm_model     <- svm(reg_formula, train_set, kernel="radial")
+plot_roc(rl_test_pred_threshold, target(test_set))
+```
+
+
+```{r}
+f_beta_score(rl_test_pred_threshold, target(test_set), beta=2)
+```
+
+### 9.5. Entrenamos un modelo SVM
+
+```{r}
+svm_model <- svm(formula(Hazardous~.), train_set, kernel = 'radial')
 
 svm_test_pred <- predict(svm_model, test_set)
-svm_threshold <- 0.5
-svm_test_pred_threshold <- ifelse(svm_test_pred >= rl_threshold, 1, 0)
-
-plot_text_cm(svm_test_pred_threshold, test_set$Hazardous)
-```
-
-```{r}
-plot_roc(svm_test_pred_threshold, test_set$Hazardous)
+svm_test_pred_threshold <- ifelse(svm_test_pred >= 0.20, 1, 0)
 ```
 
 
 ```{r}
-f_beta_score(svm_test_pred_threshold, test_set$Hazardous, beta=2)
+plot_cm(svm_test_pred_threshold, target(test_set))
 ```
 
 
-## 14. KMeans Clustering
+```{r}
+plot_roc(svm_test_pred_threshold, target(test_set))
+```
 
-### 14.1. Primero definimos cuantos grupos utilizar.  
+
+```{r}
+f_beta_score(svm_test_pred_threshold, target(test_set), beta=2)
+```
+
+
+### 9.6. Entrenamos un modelo XGBoost
+
+
+
+```{r}
+xgboost_model <- xgboost(
+ as.matrix(feat(train_set)), 
+ target(train_set),
+ eta = 0.1,
+ max_depth = 10, 
+ nround=5000, 
+ objective = "binary:logistic",
+ nthread = 24
+)
+```
+
+```{r}
+xgb_test_pred <- predict(xgboost_model, as.matrix(feat(test_set)))
+xgb_test_pred_threshold <- ifelse(xgb_test_pred >= 0.1, 1, 0)
+
+plot_cm(xgb_test_pred_threshold, target(test_set))
+```
+
+```{r}
+plot_roc(xgb_test_pred_threshold, target(test_set))
+```
+
+```{r}
+f_beta_score(xgb_test_pred_threshold, target(test_set), beta=2)
+```
+
+## 10. KMeans Clustering
+
+### 10.1. Primero definimos cuantos grupos utilizar.  
 
 Típica con estimadores de la normal.
 
 ```{r}
-scaled_data_1 <- ds_step_4 %>%
-  dplyr::select(-Hazardous) %>%
-  mutate(~(scale(.) %>% as.vector))
+scaled_data_1 <- feat(ds_step_4) %>% mutate(~(scale(.) %>% as.vector))
 ```
 
-Escalamiento diferente de la tipica normal.
+Escalamiento diferente de la típica normal.
 
 ```{r}
 scaled_data_2 <- apply(
-  ds_step_4 %>% dplyr::select(-Hazardous), 
+  feat(ds_step_4), 
   2, 
   function(x) { (x - min(x)) / (max(x) - min(x))}
 )
@@ -403,7 +458,7 @@ clustering_metrics_plot(scaled_data_2)
 ```
 
 
-### 14.2. Kmeans
+### 10.2. Kmeans
 
 ```{r}
 n_clusters <- 2
@@ -413,7 +468,7 @@ km_ds_step_4 <- data.frame(ds_step_4)
 km_ds_step_4$kmeans <- kmeans_model$cluster
 ```
 
-### 14.2. biplot
+### 10.2. biplot
 
 ```{r, fig.align='center'}
 ds_without_outliers <- filter_outliers(km_ds_step_4, max_score=0.5)
@@ -425,7 +480,7 @@ plot_robust_pca(
 
 
 
-## 15. Hierarchical Clustering
+## 10.3 Hierarchical Clustering
 
 Matriz de distancias euclídeas 
 ```{r}
@@ -453,7 +508,7 @@ cor(x = mat_dist, cophenetic(hc_ward))
 
 Construcción de un dendograma usando los resultados de la técnica de Ward
 ```{r}
-n_clusters <- 6
+n_clusters <- 2
 
 graphics.off()
 plot(hc_ward )
@@ -466,7 +521,7 @@ hc_ds$her_ward <- cutree(hc_ward, k=n_clusters)
 ```
 
 ```{r}
-ds_without_outliers <- filter_outliers(hc_ds, max_score=0.53)
+ds_without_outliers <- filter_outliers(hc_ds, max_score=0.57)
 ```
 
 ```{r}
@@ -478,7 +533,9 @@ plot_robust_pca(
 )
 ```
 
-
+```{r}
+plot_robust_pca(ds_without_outliers)
+```
 
 
 

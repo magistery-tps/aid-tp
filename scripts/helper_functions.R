@@ -10,9 +10,16 @@ import('../lib/pca.R')
 import('../lib/importance.R')
 # ------------------------------------------------------------------------------
 
+#
 # Devuelve únicamente los features del dataset.
 #
 feat <- function(df) df %>% dplyr::select(-Hazardous)
+
+#
+# Devuelve únicamente la variable target.
+#
+target <- function(df) df %>% pull(Hazardous)
+
 # 
 # Filtra las observaciones que sean ourliers multi-variados mediante el 
 # argumento max_score. También permite visualizar un boxplot de la variable
