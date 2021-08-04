@@ -288,8 +288,10 @@ rm(raw_test_set)
 ### 10.1. Entrenamos un modelo LDA
 
 ```{r}
-lda_model      <- lda(formula(Hazardous~.), train_set)
-lda_test_pred  <- predict(lda_model, feat(test_set))
+lda_model       <- lda(formula(Hazardous~.), train_set)
+
+lda_test_pred   <- predict(lda_model, feat(test_set))
+lda_train_pred  <- predict(lda_model, feat(train_set))
 ```
 
 
@@ -315,7 +317,9 @@ lda_model$scaling
 
 ```{r}
 qda_model      <- qda(formula(Hazardous~.), train_set)
+
 qda_test_pred  <- predict(qda_model, feat(test_set))
+qda_train_pred <- predict(qda_model, feat(train_set))
 ```
 
 
@@ -336,7 +340,9 @@ fbeta_score(prediction=qda_test_pred$class, reality=target(test_set), beta=2)
 
 ```{r}
 rda_model      <- rda(formula(Hazardous~.), train_set)
+
 rda_test_pred  <- predict(rda_model, test_set)
+rda_train_pred <- predict(rda_model, train_set)
 ```
 
 ```{r, fig.align='center'}
@@ -351,7 +357,7 @@ plot_roc(rda_test_pred$class, target(test_set))
 
 
 ```{r}
-fbeta_score(prediction=rda_test_pred$class, reality=target(test_set), beta=2)
+fbeta_score(rda_test_pred$class, target(test_set), beta=2)
 ```
 
 ### 10.4. Entrenamos un modelo de regresión logística
@@ -359,9 +365,13 @@ fbeta_score(prediction=rda_test_pred$class, reality=target(test_set), beta=2)
 ```{r}
 lr_model <- glm(formula(Hazardous~.), train_set, family=binomial)
 
-lr_test_pred <- predict(lr_model, test_set)
 lr_threshold <- 0.01
+
+lr_test_pred <- predict(lr_model, test_set)
 lr_test_pred_threshold <- ifelse(lr_test_pred >= lr_threshold, 1, 0)
+
+lr_train_pred <- predict(lr_model, train_set)
+lr_train_pred_threshold <- ifelse(lr_train_pred >= lr_threshold, 1, 0)
 ```
 
 
@@ -386,9 +396,13 @@ fbeta_score(lr_test_pred_threshold, target(test_set), beta=2)
 ```{r}
 svm_model <- svm(formula(Hazardous~.), train_set, kernel = 'radial')
 
-svm_test_pred <- predict(svm_model, test_set)
 svm_threshold <- 0.20
+
+svm_test_pred <- predict(svm_model, test_set)
 svm_test_pred_threshold <- ifelse(svm_test_pred >= svm_threshold, 1, 0)
+
+svm_train_pred <- predict(svm_model, train_set)
+svm_train_pred_threshold <- ifelse(svm_train_pred >= svm_threshold, 1, 0)
 ```
 
 
@@ -424,9 +438,13 @@ xgboost_model <- xgboost(
 ```
 
 ```{r, fig.align='center'}
-xgb_test_pred <- predict(xgboost_model, as.matrix(feat(test_set)))
 xgb_threshold <- 0.1
+
+xgb_test_pred <- predict(xgboost_model, as.matrix(feat(test_set)))
 xgb_test_pred_threshold <- ifelse(xgb_test_pred >= xgb_threshold, 1, 0)
+
+xgb_train_pred <- predict(xgboost_model, as.matrix(feat(train_set)))
+xgb_train_pred_threshold <- ifelse(xgb_train_pred >= xgb_threshold, 1, 0)
 
 plot_cm(xgb_test_pred_threshold, target(test_set))
 ```
@@ -447,13 +465,21 @@ fbeta_score(xgb_test_pred_threshold, target(test_set), beta=2)
 
 ```{r}
 data.frame(
-  F2Score = c(
+  Test.F2Score.Percent = c(
     fbeta_score(lda_test_pred$class,     target(test_set), beta=2, show=F),
     fbeta_score(qda_test_pred$class,     target(test_set), beta=2, show=F),
     fbeta_score(rda_test_pred$class,     target(test_set), beta=2, show=F),
     fbeta_score(lr_test_pred_threshold,  target(test_set), beta=2, show=F),
     fbeta_score(svm_test_pred_threshold, target(test_set), beta=2, show=F),
     fbeta_score(xgb_test_pred_threshold, target(test_set), beta=2, show=F)
+  ),
+  Train.F2Score.Percent = c(
+    fbeta_score(lda_train_pred$class,     target(train_set), beta=2, show=F),
+    fbeta_score(qda_train_pred$class,     target(train_set), beta=2, show=F),
+    fbeta_score(rda_train_pred$class,     target(train_set), beta=2, show=F),
+    fbeta_score(lr_train_pred_threshold,  target(train_set), beta=2, show=F),
+    fbeta_score(svm_train_pred_threshold, target(train_set), beta=2, show=F),
+    fbeta_score(xgb_train_pred_threshold, target(train_set), beta=2, show=F)
   ),
   Model = c(
     'LDA', 
@@ -464,16 +490,29 @@ data.frame(
     'XGBoost'
   ),
   Umbral = c(
-    NA, 
-    NA, 
-    NA, 
+    0.5, 
+    0.5, 
+    0.5, 
     lr_threshold,
     svm_threshold,
     xgb_threshold
   )
-) %>%  arrange(desc(F2Score))
+) %>% 
+  arrange(desc(Test.F2Score.Percent)) %>%
+  mutate(Diff.F2Score.Percent = abs(Test.F2Score.Percent - Train.F2Score.Percent)) %>%
+  mutate(
+    Test.F2Score.Percent  = round(Test.F2Score.Percent * 100, 2),
+    Train.F2Score.Percent = round(Train.F2Score.Percent * 100, 2),
+    Diff.F2Score.Percent  = round(Diff.F2Score.Percent, 3)
+  ) %>%
+  dplyr::select(
+    Test.F2Score.Percent,
+    Train.F2Score.Percent,
+    Diff.F2Score.Percent,
+    Model,
+    Umbral
+  )
 ```
-
 
 
 ## 11. KMeans Clustering
