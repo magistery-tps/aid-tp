@@ -96,10 +96,8 @@ que todas con muy simialres.
 ```{r}
 high_correlated_columns <- find_high_correlated_columns(
   feat(ds_step_1), 
-  cutoff=0.8
+  cutoff=0.9
 )
-
-print(high_correlated_columns)
 
 ds_step_2 <- ds_step_1 %>% dplyr::select(-high_correlated_columns[-1])
 
