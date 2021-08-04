@@ -499,8 +499,8 @@ data.frame(
   arrange(desc(Test.F2Score.Percent)) %>%
   mutate(Diff.F2Score.Percent = abs(Test.F2Score.Percent - Train.F2Score.Percent)) %>%
   mutate(
-    Test.F2Score.Percent  = round(Test.F2Score.Percent * 100, 2),
-    Train.F2Score.Percent = round(Train.F2Score.Percent * 100, 2),
+    Test.F2Score.Percent  = round(Test.F2Score.Percent * 100, 3),
+    Train.F2Score.Percent = round(Train.F2Score.Percent * 100, 3),
     Diff.F2Score.Percent  = round(Diff.F2Score.Percent, 3)
   ) %>%
   dplyr::select(
