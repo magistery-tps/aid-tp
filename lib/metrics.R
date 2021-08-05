@@ -40,14 +40,36 @@ fbeta_score <- function(prediction, reality, model="", positive=1, beta=1, show=
 
 
 #
+# Calcula la curva ROC
+#
+roc <- function(predictions, reality) {
+  rocit(as.numeric(predictions), as.numeric(reality))
+}
+
+#
+# Calcula la curva ROC
+#
+aur <- function(predictions, reality) {
+  r <- roc(predictions, reality)
+  r$AUR
+}
+
+#
 # Grafica de la curva ROC.
 #
 plot_roc <- function(predictions, reality) {
-  result <- rocit(as.numeric(predictions), as.numeric(reality))
-  plot(result)
-  result
+  plot(roc(predictions, reality))
 }
 
+#
+# Devuelve el numero de falsos negativos
+#
+fn <- function(predictions, reality) table(predictions, reality)[1, 2]
+
+#
+# Devuelve el numero de falsos positivos
+#
+fp <- function(predictions, reality) table(predictions, reality)[2, 1]
 
 #
 # Grafica de la matriz de confusión.

@@ -87,6 +87,25 @@ rm(dataset)
 str(ds_step_1)
 ```
 
+
+### 1.3. Tomamo una muestra del 80% del dataset.
+
+La idea de este paso es evitar tener los mismos resultado que otros análisis 
+pre-existentes en kaggle. Para esto ordenamos aleatoria-mente las observaciones 
+con el parámetro shuffle y luego tomamos una muestra del 80% de las observaciones.
+
+
+```{r}
+c(ds_step_2, any) %<-% train_test_split(
+  ds_step_1, 
+  train_size = .8, 
+  shuffle    = TRUE
+)
+rm(any)
+rm(ds_step_1)
+```
+
+
 ## 2. Eliminamos las columnas que están altamente co-relacionadas
 
 Excluimos las columnas que tienen un correlación mayor al 80%. 
@@ -95,14 +114,14 @@ que todas con muy simialres.
 
 ```{r}
 high_correlated_columns <- find_high_correlated_columns(
-  feat(ds_step_1), 
-  cutoff=0.9
+  feat(ds_step_2), 
+  cutoff=.9
 )
 
-ds_step_2 <- ds_step_1 %>% dplyr::select(-high_correlated_columns[-1])
+ds_step_3 <- ds_step_2 %>% dplyr::select(-high_correlated_columns[-1])
 
-rm(ds_step_1)
-str(ds_step_2)
+rm(ds_step_2)
+str(ds_step_3)
 ```
 
 ## 3. Tomamos las columnas que mejor separan las clases.
@@ -113,7 +132,7 @@ descuerdo a cuan buenas son para separa las clases. Luego tomaremos las 5
 variables que mejor separa las clases.
 
 ```{r, echo=TRUE, fig.align='center'}
-result <- features_importance(ds_step_2, target = 'Hazardous')
+result <- features_importance(ds_step_3, target = 'Hazardous')
 result
 
 plot_features_importance(result)
@@ -125,33 +144,33 @@ best_features <- top_acc_features(result, top=n_best_features)
 best_features
 length(best_features)
 
-ds_step_3 <- ds_step_2 %>% dplyr::select(c(best_features, c(Hazardous)))
+ds_step_4 <- ds_step_3 %>% dplyr::select(c(best_features, c(Hazardous)))
 
-rm(ds_step_2)
+rm(ds_step_3)
 ```
 
 ```{r}
-str(ds_step_3)
+str(ds_step_4)
 ```
 
 ## 4. Filtramos outliers
 
 ```{r}
-# ds_step_4 <- filter_outliers_m1(ds_step_3, max_score = 0.51)
-ds_step_4 <- filter_outliers_m2(ds_step_3)
+ds_step_5 <- filter_outliers_m1(ds_step_4, max_score = 0.51)
+# ds_step_5 <- filter_outliers_m2(ds_step_4)
 
-rm(ds_step_3)
+rm(ds_step_4)
 ```
 
 
 ## 5. Transformamos la varaible a predecir a tipo numericas
 
 ```{r}
-ds_step_5 <- ds_step_4 %>% 
+ds_step_6 <- ds_step_5 %>% 
   mutate(Hazardous = case_when(Hazardous %in% c('True') ~ 1, TRUE ~ 0))
 
-rm(ds_step_4)
-str(ds_step_5)
+rm(ds_step_5)
+str(ds_step_6)
 ```
 
 
@@ -159,20 +178,20 @@ str(ds_step_5)
 
 ### 6.1. Boxplot comparativos
 ```{r, fig.align='center'}
-coparative_boxplot(feat(ds_step_5), to_col=n_best_features)
+coparative_boxplot(feat(ds_step_6), to_col=n_best_features)
 ```
 
 
 ### 6.2. Histogramas y densidad
 
 ```{r, fig.align='center'}
-comparative_histplot(feat(ds_step_5), to_col=n_best_features)
+comparative_histplot(feat(ds_step_6), to_col=n_best_features)
 ```
 
 ### 6.3. Analizamos gráfico de normalidad univariado
 
 ```{r, echo=FALSE, fig.align='center'}
-comparative_qqplot(feat(ds_step_5), to_col=n_best_features)
+comparative_qqplot(feat(ds_step_6), to_col=n_best_features)
 ```
 **Observaciones**: Al parecer  solo Perihelion.Distance parece ser normal 
 o por lo enos la mas nromal de todas.
@@ -181,7 +200,7 @@ o por lo enos la mas nromal de todas.
 ### 6.3. Test de normalidad uni-variado
 
 ```{r}
-uni_shapiro_test(feat(ds_step_5))
+uni_shapiro_test(feat(ds_step_6))
 ```
 
 **Observaciones**: En todos los casos el p-valor < 0.05 y se rechaza 
@@ -192,7 +211,7 @@ tender anormalidad.
 ### 6.4. Test de normalidad muti-variado
 
 ```{r}
-mult_shapiro_test(feat(ds_step_5))
+mult_shapiro_test(feat(ds_step_6))
 ```
 **Observaciones**: El p-valore < 0.05 por lo tanto se rechaza normalidad 
 multi-variada. Se corresponde con el resultado de los tests de shapiro uni-variados
@@ -202,7 +221,7 @@ y los qqplot's.
 ### 6.5. Test de homocedasticidad multi-variado
 
 ```{r}
-multi_boxm_test(feat(ds_step_5), ds_step_5$Hazardous)
+multi_boxm_test(feat(ds_step_6), target(ds_step_6))
 ```
 
 **Observaciones**: El p-valor < 0.05 por lo tanto se rechaza la hipótesis 
@@ -212,25 +231,25 @@ nula y podemos decir que las variables no son homocedasticas.
 ### 6.6. Correlaciones entre variables
 
 ```{r, fig.align='center'}
-plot_correlations(feat(ds_step_5))
+plot_correlations(feat(ds_step_6))
 ```
 
 ### 6.7. Análisis completo
 
 ```{r, echo=FALSE, fig.align='center'}
-ggpairs(feat(ds_step_5), aes(colour = as.factor(ds_step_5$Hazardous), alpha = 0.4))
+ggpairs(feat(ds_step_6), aes(colour = as.factor(target(ds_step_6)), alpha = .4))
 ```
 
 
 ### 6.8. PCA: Comparación de variables originales con/sin la variable a predecir.
 
 ```{r, echo=FALSE, fig.align='center'}
-plot_pca_original_variables(ds_step_5)
+plot_pca_original_variables(ds_step_6)
 ```
 
 
 ```{r, echo=FALSE, fig.align='center'}
-plot_pca_original_variables(feat(ds_step_5))
+plot_pca_original_variables(feat(ds_step_6))
 ```
 
 
@@ -239,7 +258,7 @@ outliers para poder ver con mas claridad el biplot.
 
 
 ```{r, fig.align='center'}
-plot_robust_pca(ds_step_5)
+plot_robust_pca(ds_step_6)
 ```
 
 
@@ -252,7 +271,7 @@ alguna en el orden original.
 
 ```{r}
 c(raw_train_set, raw_test_set) %<-% train_test_split(
-  ds_step_5, 
+  ds_step_6, 
   train_size = .8, 
   shuffle    = TRUE
 )
@@ -282,28 +301,66 @@ rm(raw_test_set)
 
 ## 10. Clasificacion
 
+Antes que nada se debe definir el valor de beta para la métrica **F beta Score**. 
+En este problema debemos tener en cuenta dos factores para decidir cual el 
+mejor valor de beta:
+
+* Por su naturaleza tenemos un dataset des-balanceado. Existen pocos 
+asteroides peligrosos y mucho que no lo son. 
+
+* Por otro lado, es necesario tener en cuenta el costo que conlleva un 
+falso positivo y un falso negativo. En este análisis
+un falso positivo tiene un costo financiero de chequeo manual. Si clasificamos un asteroide
+como peligroso cuando no lo es, tendremos un costo de estudio del mismo, 
+pero es es ínfimo en paralización con el costo de un falso negativo.
+Un falso negativo se refiere aun asteroide peligroso que clasificamos como no 
+peligroso. En este caso existe un posible costo de perdida de vidas humanas y/o heridos. \
+Un ejemplo es [el incidente en Cheliábinsk (Rusia)](https://www.youtube.com/watch?v=0lGYeAwzslU) 
+en 2013, donde miles de personas resultaron heridas por un asteroide no 
+detectado.
+
+Por las razones ya explicadas necesitamos priorizar el recall por sobre
+la precisión. Para explicarlo de forma simple, es preferible predecir algun 
+negativos como positivos que predecir perfectamente
+los positivos a costa de tener falsos negativos.
+
+Finalmente para priorizar el recall elegimos un beta > 1.
+
+```{r}
+beta = 2
+```
 
 ### 10.1. Entrenamos un modelo LDA
 
 ```{r}
-lda_model       <- lda(formula(Hazardous~.), train_set)
+lda_model <- lda(formula(Hazardous~.), train_set)
+```
 
-lda_test_pred   <- predict(lda_model, feat(test_set))
-lda_train_pred  <- predict(lda_model, feat(train_set))
+
+```{r}
+lda_threshold <- search_min_fn_threshold(
+  lda_model, 
+  feat(test_set), 
+  target(test_set),
+  xda_predict
+)
+
+lda_test_pred  <- xda_predict(lda_model, feat(test_set), lda_threshold)
+lda_train_pred <- xda_predict(lda_model, feat(train_set), lda_threshold)
 ```
 
 
 ```{r, fig.align='center'}
-plot_cm(lda_test_pred$class, target(test_set))
+plot_cm(lda_test_pred, target(test_set))
 ```
 
 
 ```{r, fig.align='center'}
-plot_roc(lda_test_pred$class, target(test_set))
+plot_roc(lda_test_pred, target(test_set))
 ```
 
 ```{r}
-fbeta_score(prediction=lda_test_pred$class, reality=target(test_set), beta=2)
+fbeta_score(lda_test_pred, target(test_set), beta=2)
 ```
 
 ```{r}
@@ -314,111 +371,139 @@ lda_model$scaling
 ### 10.2. Entrenamos un modelo QDA
 
 ```{r}
-qda_model      <- qda(formula(Hazardous~.), train_set)
+qda_model <- qda(formula(Hazardous~.), train_set)
+```
 
-qda_test_pred  <- predict(qda_model, feat(test_set))
-qda_train_pred <- predict(qda_model, feat(train_set))
+```{r}
+qda_threshold <- search_min_fn_threshold(
+  qda_model, 
+  feat(test_set), 
+  target(test_set),
+  xda_predict
+)
+
+qda_test_pred  <- xda_predict(qda_model, feat(test_set), qda_threshold)
+qda_train_pred <- xda_predict(qda_model, feat(train_set), qda_threshold)
 ```
 
 
 ```{r, fig.align='center'}
-plot_cm(qda_test_pred$class, target(test_set))
+plot_cm(qda_test_pred, target(test_set))
 ```
 
 ```{r, fig.align='center'}
-plot_roc(qda_test_pred$class, target(test_set))
+plot_roc(qda_test_pred, target(test_set))
 ```
 
 
 ```{r}
-fbeta_score(prediction=qda_test_pred$class, reality=target(test_set), beta=2)
+fbeta_score(qda_test_pred, target(test_set), beta=2)
 ```
 
 ### 10.3. Entrenamos un modelo RDA
 
 ```{r}
-rda_model      <- rda(formula(Hazardous~.), train_set)
-
-rda_test_pred  <- predict(rda_model, test_set)
-rda_train_pred <- predict(rda_model, train_set)
-```
-
-```{r, fig.align='center'}
-plot_cm(rda_test_pred$class, target(test_set))
-```
-
-
-
-```{r, fig.align='center'}
-plot_roc(rda_test_pred$class, target(test_set))
+rda_model <- rda(formula(Hazardous~.), train_set)
 ```
 
 
 ```{r}
-fbeta_score(rda_test_pred$class, target(test_set), beta=2)
+rda_threshold <- search_min_fn_threshold(
+  rda_model, 
+  feat(test_set), 
+  target(test_set),
+  xda_predict
+)
+
+rda_test_pred  <- xda_predict(rda_model, feat(test_set),  rda_threshold)
+rda_train_pred <- xda_predict(rda_model, feat(train_set), rda_threshold)
+```
+
+
+```{r, fig.align='center'}
+plot_cm(rda_test_pred, target(test_set))
+```
+
+
+
+```{r, fig.align='center'}
+plot_roc(rda_test_pred, target(test_set))
+```
+
+
+```{r}
+fbeta_score(rda_test_pred, target(test_set), beta=2)
 ```
 
 ### 10.4. Entrenamos un modelo de regresión logística
 
 ```{r}
 lr_model <- glm(formula(Hazardous~.), train_set, family=binomial)
-
-lr_threshold <- 0.01
-
-lr_test_pred <- predict(lr_model, test_set)
-lr_test_pred_threshold <- ifelse(lr_test_pred >= lr_threshold, 1, 0)
-
-lr_train_pred <- predict(lr_model, train_set)
-lr_train_pred_threshold <- ifelse(lr_train_pred >= lr_threshold, 1, 0)
 ```
-
-
-```{r, fig.align='center'}
-plot_cm(lr_test_pred_threshold, target(test_set))
-```
-
-
-
-```{r, fig.align='center'}
-plot_roc(lr_test_pred_threshold, target(test_set))
-```
-
 
 ```{r}
-fbeta_score(lr_test_pred_threshold, target(test_set), beta=2)
+lr_threshold <- search_min_fn_threshold(
+  lr_model, 
+  feat(test_set), 
+  target(test_set),
+  model_predict
+)
+
+lr_test_pred  <- model_predict(lr_model, test_set,  lr_threshold)
+lr_train_pred <- model_predict(lr_model, train_set, lr_threshold)
 ```
 
+
+```{r, fig.align='center'}
+plot_cm(lr_test_pred, target(test_set))
+```
+```{r}
+fp(lr_test_pred, target(test_set))
+fn(lr_test_pred, target(test_set))
+```
+
+```{r, fig.align='center'}
+plot_roc(lr_test_pred, target(test_set))
+```
+
+```{r}
+fbeta_score(lr_test_pred, target(test_set), beta=2)
+```
 
 ### 10.5. Entrenamos un modelo SVM
 
 ```{r}
 svm_model <- svm(formula(Hazardous~.), train_set, kernel = 'radial')
+```
 
-svm_threshold <- 0.20
 
-svm_test_pred <- predict(svm_model, test_set)
-svm_test_pred_threshold <- ifelse(svm_test_pred >= svm_threshold, 1, 0)
+```{r}
+svm_threshold <- search_min_fn_threshold(
+  svm_model, 
+  feat(test_set), 
+  target(test_set),
+  model_predict
+)
 
-svm_train_pred <- predict(svm_model, train_set)
-svm_train_pred_threshold <- ifelse(svm_train_pred >= svm_threshold, 1, 0)
+svm_test_pred  <- model_predict(svm_model, test_set,  svm_threshold)
+svm_train_pred <- model_predict(svm_model, train_set, svm_threshold)
 ```
 
 
 ```{r, fig.align='center'}
-plot_cm(svm_test_pred_threshold, target(test_set))
+plot_cm(svm_test_pred, target(test_set))
 ```
 
 
 ```{r, fig.align='center'}
-plot_roc(svm_test_pred_threshold, target(test_set))
+plot_roc(svm_test_pred, target(test_set))
 ```
 
 ```{r}
-fbeta_score(svm_test_pred_threshold, target(test_set), beta=2)
+fbeta_score(svm_test_pred, target(test_set), beta=2)
 ```
 
 ### 10.6. Entrenamos un modelo XGBoost
-
 
 
 ```{r, include=TRUE}
@@ -436,48 +521,68 @@ xgboost_model <- xgboost(
 ```
 
 ```{r, fig.align='center'}
-xgb_threshold <- 0.1
+xgb_threshold <- search_min_fn_threshold(
+  xgboost_model, 
+  feat(test_set), 
+  target(test_set),
+  xgboost_predict
+)
 
-xgb_test_pred <- predict(xgboost_model, as.matrix(feat(test_set)))
-xgb_test_pred_threshold <- ifelse(xgb_test_pred >= xgb_threshold, 1, 0)
-
-xgb_train_pred <- predict(xgboost_model, as.matrix(feat(train_set)))
-xgb_train_pred_threshold <- ifelse(xgb_train_pred >= xgb_threshold, 1, 0)
-
-plot_cm(xgb_test_pred_threshold, target(test_set))
-```
-
-```{r, fig.align='center'}
-plot_roc(xgb_test_pred_threshold, target(test_set))
+xgb_test_pred  <- xgboost_predict(xgboost_model, feat(test_set),  xgb_threshold)
+xgb_train_pred <- xgboost_predict(xgboost_model, feat(train_set), xgb_threshold)
 ```
 
 ```{r}
-fbeta_score(xgb_test_pred_threshold, target(test_set), beta=2)
+plot_cm(xgb_test_pred, target(test_set))
 ```
 
 
+```{r, fig.align='center'}
+plot_roc(xgb_test_pred, target(test_set))
+```
+
+```{r}
+fbeta_score(xgb_test_pred, target(test_set), beta=2)
+```
 
 
 ### 10.7. Comparativa de metricas
 
+### 10.7.1 Metricas seleccionando el threshould con maximo AUR
 
 ```{r}
 data.frame(
   Test.F2Score.Percent = c(
-    fbeta_score(lda_test_pred$class,     target(test_set), beta=2, show=F),
-    fbeta_score(qda_test_pred$class,     target(test_set), beta=2, show=F),
-    fbeta_score(rda_test_pred$class,     target(test_set), beta=2, show=F),
-    fbeta_score(lr_test_pred_threshold,  target(test_set), beta=2, show=F),
-    fbeta_score(svm_test_pred_threshold, target(test_set), beta=2, show=F),
-    fbeta_score(xgb_test_pred_threshold, target(test_set), beta=2, show=F)
+    fbeta_score(lda_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(qda_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(rda_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(lr_test_pred,  target(test_set), beta=2, show=F),
+    fbeta_score(svm_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(xgb_test_pred, target(test_set), beta=2, show=F)
   ),
   Train.F2Score.Percent = c(
-    fbeta_score(lda_train_pred$class,     target(train_set), beta=2, show=F),
-    fbeta_score(qda_train_pred$class,     target(train_set), beta=2, show=F),
-    fbeta_score(rda_train_pred$class,     target(train_set), beta=2, show=F),
-    fbeta_score(lr_train_pred_threshold,  target(train_set), beta=2, show=F),
-    fbeta_score(svm_train_pred_threshold, target(train_set), beta=2, show=F),
-    fbeta_score(xgb_train_pred_threshold, target(train_set), beta=2, show=F)
+    fbeta_score(lda_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(qda_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(rda_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(lr_train_pred,  target(train_set), beta=2, show=F),
+    fbeta_score(svm_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(xgb_train_pred, target(train_set), beta=2, show=F)
+  ),
+  False.Negative = c(
+    fn(lda_test_pred, target(test_set)),
+    fn(qda_test_pred, target(test_set)),
+    fn(rda_test_pred, target(test_set)),
+    fn(lr_test_pred,  target(test_set)),
+    fn(svm_test_pred, target(test_set)),
+    fn(xgb_test_pred, target(test_set))
+  ),
+  False.positive = c(
+    fp(lda_test_pred, target(test_set)),
+    fp(qda_test_pred, target(test_set)),
+    fp(rda_test_pred, target(test_set)),
+    fp(lr_test_pred,  target(test_set)),
+    fp(svm_test_pred, target(test_set)),
+    fp(xgb_test_pred, target(test_set))
   ),
   Model = c(
     'LDA', 
@@ -488,29 +593,259 @@ data.frame(
     'XGBoost'
   ),
   Umbral = c(
-    0.5, 
-    0.5, 
-    0.5, 
+    lda_threshold, 
+    qda_threshold, 
+    rda_threshold, 
+    lr_threshold,
+    svm_threshold,
+    xgb_threshold
+  )
+) %>%
+  mutate(
+    Test.F2Score.Percent  = round(Test.F2Score.Percent * 100, 3),
+    Train.F2Score.Percent = round(Train.F2Score.Percent * 100, 3)
+  ) %>%
+  dplyr::select(
+    False.Negative,
+    False.positive,
+    Test.F2Score.Percent,
+    Train.F2Score.Percent,
+    Model,
+    Umbral
+  ) %>%
+  arrange(False.Negative, desc(Test.F2Score.Percent))
+```
+
+### 10.7.2 Metricas seleccionando el threshould con minimo False Negative
+
+```{r, fig.align='center'}
+lda_threshold <- search_max_aur_threshold(
+  lda_model, 
+  feat(test_set), 
+  target(test_set),
+  xda_predict
+)
+
+lda_test_pred  <- xda_predict(lda_model, feat(test_set), lda_threshold)
+lda_train_pred <- xda_predict(lda_model, feat(train_set), lda_threshold)
+
+qda_threshold <- search_max_aur_threshold(
+  qda_model, 
+  feat(test_set), 
+  target(test_set),
+  xda_predict
+)
+
+qda_test_pred  <- xda_predict(qda_model, feat(test_set), qda_threshold)
+qda_train_pred <- xda_predict(qda_model, feat(train_set), qda_threshold)
+
+
+rda_threshold <- search_max_aur_threshold(
+  rda_model, 
+  feat(test_set), 
+  target(test_set),
+  xda_predict
+)
+
+rda_test_pred  <- xda_predict(rda_model, feat(test_set),  rda_threshold)
+rda_train_pred <- xda_predict(rda_model, feat(train_set), rda_threshold)
+
+lr_threshold <- search_max_aur_threshold(
+  lr_model, 
+  feat(test_set), 
+  target(test_set),
+  model_predict
+)
+
+lr_test_pred  <- model_predict(lr_model, test_set,  lr_threshold)
+lr_train_pred <- model_predict(lr_model, train_set, lr_threshold)
+
+svm_threshold <- search_max_aur_threshold(
+  svm_model, 
+  feat(test_set), 
+  target(test_set),
+  model_predict
+)
+
+svm_test_pred  <- model_predict(svm_model, test_set,  svm_threshold)
+svm_train_pred <- model_predict(svm_model, train_set, svm_threshold)
+
+
+xgb_threshold <- search_min_fn_threshold(
+  xgboost_model, 
+  feat(test_set), 
+  target(test_set),
+  xgboost_predict
+)
+
+xgb_test_pred  <- xgboost_predict(xgboost_model, feat(test_set),  xgb_threshold)
+xgb_train_pred <- xgboost_predict(xgboost_model, feat(train_set), xgb_threshold)
+```
+
+
+```{r}
+data.frame(
+  Test.F2Score.Percent = c(
+    fbeta_score(lda_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(qda_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(rda_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(lr_test_pred,  target(test_set), beta=2, show=F),
+    fbeta_score(svm_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(xgb_test_pred, target(test_set), beta=2, show=F)
+  ),
+  Train.F2Score.Percent = c(
+    fbeta_score(lda_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(qda_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(rda_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(lr_train_pred,  target(train_set), beta=2, show=F),
+    fbeta_score(svm_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(xgb_train_pred, target(train_set), beta=2, show=F)
+  ),
+  False.Negative = c(
+    fn(lda_test_pred, target(test_set)),
+    fn(qda_test_pred, target(test_set)),
+    fn(rda_test_pred, target(test_set)),
+    fn(lr_test_pred,  target(test_set)),
+    fn(svm_test_pred, target(test_set)),
+    fn(xgb_test_pred, target(test_set))
+  ),
+  False.positive = c(
+    fp(lda_test_pred, target(test_set)),
+    fp(qda_test_pred, target(test_set)),
+    fp(rda_test_pred, target(test_set)),
+    fp(lr_test_pred,  target(test_set)),
+    fp(svm_test_pred, target(test_set)),
+    fp(xgb_test_pred, target(test_set))
+  ),
+  Model = c(
+    'LDA', 
+    'QDA', 
+    'RDA', 
+    'Regresion Logistica',
+    'SVM',
+    'XGBoost'
+  ),
+  Umbral = c(
+    lda_threshold, 
+    qda_threshold, 
+    rda_threshold, 
     lr_threshold,
     svm_threshold,
     xgb_threshold
   )
 ) %>% 
-  arrange(desc(Test.F2Score.Percent)) %>%
-  mutate(Diff.F2Score.Percent = abs(Test.F2Score.Percent - Train.F2Score.Percent)) %>%
   mutate(
     Test.F2Score.Percent  = round(Test.F2Score.Percent * 100, 3),
-    Train.F2Score.Percent = round(Train.F2Score.Percent * 100, 3),
-    Diff.F2Score.Percent  = round(Diff.F2Score.Percent, 3)
+    Train.F2Score.Percent = round(Train.F2Score.Percent * 100, 3)
   ) %>%
   dplyr::select(
+    False.Negative,
+    False.positive,
     Test.F2Score.Percent,
     Train.F2Score.Percent,
-    Diff.F2Score.Percent,
     Model,
     Umbral
-  )
+  ) %>%
+  arrange(False.Negative, desc(Test.F2Score.Percent))
 ```
+
+
+### 10.7.3 Metricas seleccionando threshould=0.5
+
+```{r, fig.align='center'}
+lda_threshold  <- 0.5
+lda_test_pred  <- xda_predict(lda_model, feat(test_set), lda_threshold)
+lda_train_pred <- xda_predict(lda_model, feat(train_set), lda_threshold)
+
+qda_threshold  <- 0.5
+qda_test_pred  <- xda_predict(qda_model, feat(test_set), qda_threshold)
+qda_train_pred <- xda_predict(qda_model, feat(train_set), qda_threshold)
+
+
+rda_threshold  <- 0.5
+rda_test_pred  <- xda_predict(rda_model, feat(test_set),  rda_threshold)
+rda_train_pred <- xda_predict(rda_model, feat(train_set), rda_threshold)
+
+lr_threshold  <- 0.5
+lr_test_pred  <- model_predict(lr_model, test_set,  lr_threshold)
+lr_train_pred <- model_predict(lr_model, train_set, lr_threshold)
+
+svm_threshold  <- 0.5
+svm_test_pred  <- model_predict(svm_model, test_set,  svm_threshold)
+svm_train_pred <- model_predict(svm_model, train_set, svm_threshold)
+
+xgb_threshold  <- 0.5
+xgb_test_pred  <- xgboost_predict(xgboost_model, feat(test_set),  xgb_threshold)
+xgb_train_pred <- xgboost_predict(xgboost_model, feat(train_set), xgb_threshold)
+```
+
+
+```{r}
+data.frame(
+  Test.F2Score.Percent = c(
+    fbeta_score(lda_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(qda_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(rda_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(lr_test_pred,  target(test_set), beta=2, show=F),
+    fbeta_score(svm_test_pred, target(test_set), beta=2, show=F),
+    fbeta_score(xgb_test_pred, target(test_set), beta=2, show=F)
+  ),
+  Train.F2Score.Percent = c(
+    fbeta_score(lda_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(qda_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(rda_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(lr_train_pred,  target(train_set), beta=2, show=F),
+    fbeta_score(svm_train_pred, target(train_set), beta=2, show=F),
+    fbeta_score(xgb_train_pred, target(train_set), beta=2, show=F)
+  ),
+  False.Negative = c(
+    fn(lda_test_pred, target(test_set)),
+    fn(qda_test_pred, target(test_set)),
+    fn(rda_test_pred, target(test_set)),
+    fn(lr_test_pred,  target(test_set)),
+    fn(svm_test_pred, target(test_set)),
+    fn(xgb_test_pred, target(test_set))
+  ),
+  False.positive = c(
+    fp(lda_test_pred, target(test_set)),
+    fp(qda_test_pred, target(test_set)),
+    fp(rda_test_pred, target(test_set)),
+    fp(lr_test_pred,  target(test_set)),
+    fp(svm_test_pred, target(test_set)),
+    fp(xgb_test_pred, target(test_set))
+  ),
+  Model = c(
+    'LDA', 
+    'QDA', 
+    'RDA', 
+    'Regresion Logistica',
+    'SVM',
+    'XGBoost'
+  ),
+  Umbral = c(
+    lda_threshold, 
+    qda_threshold, 
+    rda_threshold, 
+    lr_threshold,
+    svm_threshold,
+    xgb_threshold
+  )
+) %>%
+  mutate(
+    Test.F2Score.Percent  = round(Test.F2Score.Percent * 100, 3),
+    Train.F2Score.Percent = round(Train.F2Score.Percent * 100, 3)
+  ) %>%
+  dplyr::select(
+    False.Negative,
+    False.positive,
+    Test.F2Score.Percent,
+    Train.F2Score.Percent,
+    Model,
+    Umbral
+  ) %>%
+  arrange(False.Negative, desc(Test.F2Score.Percent))
+```
+
 
 
 ## 11. KMeans Clustering
@@ -520,7 +855,7 @@ data.frame(
 Típica con estimadores de la normal.
 
 ```{r}
-scaled_data_1 <- feat(ds_step_5) %>% mutate(~(scale(.) %>% as.vector))
+scaled_data_1 <- feat(ds_step_6) %>% mutate(~(scale(.) %>% as.vector))
 ```
 
 ```{r, fig.align='center'}
@@ -531,7 +866,7 @@ Escalamiento diferente de la típica normal.
 
 ```{r}
 scaled_data_2 <- apply(
-  feat(ds_step_5), 
+  feat(ds_step_6), 
   2, 
   function(x) { (x - min(x)) / (max(x) - min(x))}
 )
@@ -548,16 +883,16 @@ clustering_metrics_plot(scaled_data_2)
 n_clusters <- 2
 kmeans_model <- kmeans(scaled_data_1, n_clusters)
 
-km_ds_step_5 <- data.frame(ds_step_5)
-km_ds_step_5$kmeans <- kmeans_model$cluster
+km_ds_step_6 <- data.frame(ds_step_6)
+km_ds_step_6$kmeans <- kmeans_model$cluster
 ```
 
 ### 10.2. biplot
 
 
 ```{r}
-# ds_without_outliers <- filter_outliers_m1(km_ds_step_5, max_score=0.5)
-ds_without_outliers <- filter_outliers_m2(km_ds_step_5)
+# ds_without_outliers <- filter_outliers_m1(km_ds_step_6, max_score=0.5)
+ds_without_outliers <- filter_outliers_m2(km_ds_step_6)
 ```
 
 
@@ -574,7 +909,7 @@ plot_robust_pca(
 
 Matriz de distancias euclídeas 
 ```{r}
-mat_dist <- dist(x = ds_step_5, method = "euclidean") 
+mat_dist <- dist(x = ds_step_6, method = "euclidean") 
 ```
 
 
@@ -606,7 +941,7 @@ rect.hclust(hc_ward, k=n_clusters, border="red")
 ```
 
 ```{r}
-hc_ds <- data.frame(ds_step_5)
+hc_ds <- data.frame(ds_step_6)
 hc_ds$her_ward <- cutree(hc_ward, k=n_clusters)
 ```
 
