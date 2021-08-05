@@ -20,6 +20,15 @@ feat <- function(df) df %>% dplyr::select(-Hazardous)
 #
 target <- function(df) df %>% pull(Hazardous)
 
+target_to_num <- function(df) {
+  df %>% mutate(Hazardous = case_when(Hazardous %in% c('True') ~ 1, TRUE ~ 0))
+}
+
+target_to_str <- function(df) {
+  df %>% mutate(Hazardous = ifelse(Hazardous == 1, 'TRUE', 'FALSE'))
+}
+
+
 # 
 # Filtra las observaciones que sean ourliers multi-variados mediante el 
 # argumento max_score. También permite visualizar un boxplot de la variable

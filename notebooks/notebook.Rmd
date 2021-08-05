@@ -98,7 +98,7 @@ con el parámetro shuffle y luego tomamos una muestra del 80% de las observacion
 ```{r}
 c(ds_step_2, any) %<-% train_test_split(
   ds_step_1, 
-  train_size = .8, 
+  train_size = .7, 
   shuffle    = TRUE
 )
 rm(any)
@@ -124,16 +124,29 @@ rm(ds_step_2)
 str(ds_step_3)
 ```
 
-## 3. Tomamos las columnas que mejor separan las clases.
+## 3. Transformamos la varaible a predecir a tipo numericas
 
-Para realizar este paso vamos a utilizar la función `feature_importance` 
-del algoritmo Random Forest. Esta función nos permite comparar las variables 
-descuerdo a cuan buenas son para separa las clases. Luego tomaremos las 5
-variables que mejor separa las clases.
+```{r}
+ds_step_4 <- target_to_num(ds_step_3)
+
+rm(ds_step_3)
+str(ds_step_4)
+```
+
+## 4. Seleccionamos las variables
+
+## 4.1 Feature importance
+
+Tomamos las columnas que mejor separan las clases. Para realizar este paso 
+vamos a utilizar la función `feature_importance` del algoritmo Random Forest. 
+Esta función nos permite comparar las variables descuerdo a cuan buenas son 
+para separa las clases. Luego tomaremos las 5 variables que mejor separa 
+las clases.
+
+
 
 ```{r, echo=TRUE, fig.align='center'}
-result <- features_importance(ds_step_3, target = 'Hazardous')
-result
+result <- features_importance(target_to_str(ds_step_4), target = 'Hazardous')
 
 plot_features_importance(result)
 
@@ -144,34 +157,59 @@ best_features <- top_acc_features(result, top=n_best_features)
 best_features
 length(best_features)
 
-ds_step_4 <- ds_step_3 %>% dplyr::select(c(best_features, c(Hazardous)))
-
-rm(ds_step_3)
+ds_step_5 <- ds_step_4 %>% dplyr::select(c(best_features, c(Hazardous)))
 ```
 
+## 4.2 Cluster de variables
+
+En este apartado vamos a internar agrupas las variables que son parecida y
+luego seleccionar una de cada grupo. Es otra forma de eliminar variables muy 
+correlaciones
+
 ```{r}
-str(ds_step_4)
+n_clusters <- n_best_features
+
+km_result <- kmeans(t(scale(feat(ds_step_4))), n_clusters)
+
+df_variables <- data.frame(t(feat(ds_step_4)))
+df_variables$cluster <- km_result$cluster
+
+variable_clusters <- index_as_column(df_variables) %>% 
+ dplyr::select(cluster, index) %>%
+ dplyr::rename(Cluster = cluster, Variable = index) %>%
+ arrange(Cluster)
+
+datatable(variable_clusters)
 ```
 
-## 4. Filtramos outliers
+
+## 4.3 PCA
+
+En este apartado la idea es seleccionar variables no cor relacionadas. Esto 
+se puede detectar por medio del angulo entre las variables originales.
+Si el angulo es muy pequeño, entonces las variables están altamente 
+correlacionadas pudiendo seleccionar una de ellas.
+
+```{r, echo=FALSE, fig.align='center'}
+plot_pca_original_variables(feat(ds_step_4))
+```
+
 
 ```{r}
-ds_step_5 <- filter_outliers_m1(ds_step_4, max_score = 0.51)
-# ds_step_5 <- filter_outliers_m2(ds_step_4)
-
 rm(ds_step_4)
+str(ds_step_5)
 ```
 
 
-## 5. Transformamos la varaible a predecir a tipo numericas
+## 5. Filtramos outliers
 
 ```{r}
-ds_step_6 <- ds_step_5 %>% 
-  mutate(Hazardous = case_when(Hazardous %in% c('True') ~ 1, TRUE ~ 0))
+ds_step_6 <- filter_outliers_m1(ds_step_5, max_score = 0.51)
+# ds_step_6 <- filter_outliers_m2(ds_step_5)
 
 rm(ds_step_5)
-str(ds_step_6)
 ```
+
 
 
 ## 6. Análisis Exploratorio
@@ -545,10 +583,9 @@ plot_roc(xgb_test_pred, target(test_set))
 fbeta_score(xgb_test_pred, target(test_set), beta=2)
 ```
 
-
 ### 10.7. Comparativa de metricas
 
-### 10.7.1 Metricas seleccionando el threshould con maximo AUR
+### 10.7.1 Metricas seleccionando el threshould con minimo False Negative
 
 ```{r}
 data.frame(
@@ -616,7 +653,7 @@ data.frame(
   arrange(False.Negative, desc(Test.F2Score.Percent))
 ```
 
-### 10.7.2 Metricas seleccionando el threshould con minimo False Negative
+### 10.7.2 Metricas seleccionando el threshould con maximo AUR
 
 ```{r, fig.align='center'}
 lda_threshold <- search_max_aur_threshold(
@@ -671,7 +708,7 @@ svm_test_pred  <- model_predict(svm_model, test_set,  svm_threshold)
 svm_train_pred <- model_predict(svm_model, train_set, svm_threshold)
 
 
-xgb_threshold <- search_min_fn_threshold(
+xgb_threshold <- search_max_aur_threshold(
   xgboost_model, 
   feat(test_set), 
   target(test_set),
@@ -680,10 +717,9 @@ xgb_threshold <- search_min_fn_threshold(
 
 xgb_test_pred  <- xgboost_predict(xgboost_model, feat(test_set),  xgb_threshold)
 xgb_train_pred <- xgboost_predict(xgboost_model, feat(train_set), xgb_threshold)
-```
 
 
-```{r}
+
 data.frame(
   Test.F2Score.Percent = c(
     fbeta_score(lda_test_pred, target(test_set), beta=2, show=F),

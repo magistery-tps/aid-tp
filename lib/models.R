@@ -22,7 +22,7 @@ search_max_aur_threshold <- function(
   features,
   target,
   perdict_callback,
-  thresholds = seq(0, 1, 0.01)
+  thresholds = seq(0.01, 0.99, 0.01)
 ) {
   best_threshold <- 0.5
   max_aur <- 0.5
@@ -45,7 +45,7 @@ search_min_fn_threshold <- function(
   features,
   target,
   perdict_callback,
-  thresholds = seq(0, 1, 0.01)
+  thresholds = seq(0.01, 0.99, 0.01)
 ) {
   best_threshold <- 0.5
   min_fn <- 10000000000

@@ -18,8 +18,10 @@ import('./data-frame.R')
 # o valores de la variable target.
 #
 features_importance <- function(df, target) {
-  features <- df %>% select_if(is.numeric)
-  target   <- df %>% 
+  features <- df %>% 
+    dplyr::select_if(is.numeric)
+
+  target <- df %>% 
     dplyr::select(target) %>%
     mutate_if(is.character, as.factor) %>%
     pull(target)
