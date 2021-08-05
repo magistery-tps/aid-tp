@@ -98,7 +98,7 @@ con el parámetro shuffle y luego tomamos una muestra del 80% de las observacion
 ```{r}
 c(ds_step_2, any) %<-% train_test_split(
   ds_step_1, 
-  train_size = .7, 
+  train_size = .8, 
   shuffle    = TRUE
 )
 rm(any)
@@ -167,19 +167,7 @@ luego seleccionar una de cada grupo. Es otra forma de eliminar variables muy
 correlaciones
 
 ```{r}
-n_clusters <- n_best_features
-
-km_result <- kmeans(t(scale(feat(ds_step_4))), n_clusters)
-
-df_variables <- data.frame(t(feat(ds_step_4)))
-df_variables$cluster <- km_result$cluster
-
-variable_clusters <- index_as_column(df_variables) %>% 
- dplyr::select(cluster, index) %>%
- dplyr::rename(Cluster = cluster, Variable = index) %>%
- arrange(Cluster)
-
-datatable(variable_clusters)
+kmeans_variable_clusters(feat(ds_step_4), n_clusters = n_best_features)
 ```
 
 
@@ -190,7 +178,7 @@ se puede detectar por medio del angulo entre las variables originales.
 Si el angulo es muy pequeño, entonces las variables están altamente 
 correlacionadas pudiendo seleccionar una de ellas.
 
-```{r, echo=FALSE, fig.align='center'}
+```{r, echo=FALSE, fig.align='center', fig.height = 8, fig.width = 10}
 plot_pca_original_variables(feat(ds_step_4))
 ```
 
@@ -203,8 +191,8 @@ str(ds_step_5)
 
 ## 5. Filtramos outliers
 
-```{r}
-ds_step_6 <- filter_outliers_m1(ds_step_5, max_score = 0.51)
+```{r, fig.height = 4, fig.width = 4}
+ds_step_6 <- filter_outliers_m1(ds_step_5, max_score = 0.55)
 # ds_step_6 <- filter_outliers_m2(ds_step_5)
 
 rm(ds_step_5)
@@ -215,20 +203,20 @@ rm(ds_step_5)
 ## 6. Análisis Exploratorio
 
 ### 6.1. Boxplot comparativos
-```{r, fig.align='center'}
+```{r, fig.align='center', fig.height = 6, fig.width = 10}
 coparative_boxplot(feat(ds_step_6), to_col=n_best_features)
 ```
 
 
 ### 6.2. Histogramas y densidad
 
-```{r, fig.align='center'}
+```{r, fig.align='center', fig.height = 6, fig.width = 10}
 comparative_histplot(feat(ds_step_6), to_col=n_best_features)
 ```
 
 ### 6.3. Analizamos gráfico de normalidad univariado
 
-```{r, echo=FALSE, fig.align='center'}
+```{r, echo=FALSE, fig.align='center', fig.height = 6, fig.width = 10}
 comparative_qqplot(feat(ds_step_6), to_col=n_best_features)
 ```
 **Observaciones**: Al parecer  solo Perihelion.Distance parece ser normal 
@@ -274,7 +262,7 @@ plot_correlations(feat(ds_step_6))
 
 ### 6.7. Análisis completo
 
-```{r, echo=FALSE, fig.align='center'}
+```{r, echo=FALSE, fig.align='center', fig.height = 6, fig.width = 10}
 ggpairs(feat(ds_step_6), aes(colour = as.factor(target(ds_step_6)), alpha = .4))
 ```
 
@@ -295,7 +283,7 @@ plot_pca_original_variables(feat(ds_step_6))
 outliers para poder ver con mas claridad el biplot.
 
 
-```{r, fig.align='center'}
+```{r, fig.align='center', fig.height = 6, fig.width = 10}
 plot_robust_pca(ds_step_6)
 ```
 
@@ -968,11 +956,10 @@ cor(x = mat_dist, cophenetic(hc_ward))
 ```
 
 Construcción de un dendograma usando los resultados de la técnica de Ward
-```{r, fig.align='center'}
+```{r, fig.align='center', fig.height = 6, fig.width = 10}
 n_clusters <- 2
 
-graphics.off()
-plot(hc_ward )
+plot(hc_ward)
 rect.hclust(hc_ward, k=n_clusters, border="red")
 ```
 
@@ -986,7 +973,7 @@ hc_ds$her_ward <- cutree(hc_ward, k=n_clusters)
 ds_without_outliers <- filter_outliers_m2(hc_ds)
 ```
 
-```{r, fig.align='center'}
+```{r, fig.align='center', fig.height = 6, fig.width = 10}
 plot_robust_pca(
   ds_without_outliers %>% dplyr::select(-her_ward),
   groups = factor(ds_without_outliers$her_ward),

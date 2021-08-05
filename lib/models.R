@@ -104,3 +104,17 @@ model_predict <- function(model, features, threshold=.5, positive=1, negative=0)
   ifelse(prediction >= threshold, positive, negative)
 } 
 
+
+kmeans_variable_clusters <- function(features, n_clusters) {
+  km_result <- kmeans(t(scale(features)), n_clusters)
+  
+  df_variables <- data.frame(t(features))
+  df_variables$cluster <- km_result$cluster
+  
+  index_as_column(df_variables) %>% 
+    dplyr::select(cluster, index) %>%
+    dplyr::rename(variable = index) %>%
+    arrange(cluster) %>%
+    dplyr::group_by(cluster) %>%
+    dplyr::summarise(variable = toString(unique(variable)))  
+}
