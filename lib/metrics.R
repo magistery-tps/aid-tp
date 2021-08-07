@@ -107,6 +107,15 @@ best_roc_threshold <- function(predictions, reality) {
 }
 
 
+clustering_max_sil_k <- function(df, kmax=10, f="kmeans") {
+  clustering_metrics(df, kmax, f) %>% 
+    dplyr::mutate(k = row_number()) %>%
+    dplyr::arrange(desc(sil)) %>%
+    dplyr::select(k) %>%
+    dplyr::pull() %>%
+    first()
+}
+
 clustering_metrics <- function(datA_esc, kmax=10, f="kmeans") {
   sil = array()
   sse = array()
@@ -171,3 +180,10 @@ clustering_metrics_plot <- function(data, kmax=10, f="kmeans") {
   metrics <- clustering_metrics(data, kmax, f)
   plot_sil_sse(metrics, kmax)
 }
+
+plot_dendrogram <- function(hc_result, k) {
+  plot(hc_result)
+  rect.hclust(hc_result, k=k, border="red")
+}
+  
+

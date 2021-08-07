@@ -78,8 +78,10 @@ plot_robust_pca <- function(
   varname.size   = 3.8,
   colours        = c("green", "red"),
   labels         = c("No", "Yes"),
-  groups         = NULL
+  groups         = NULL,
+  seed           = 1
 ) {
+  set.seed(seed)
   pca_result <- pca(feat(df), scale = TRUE, robust = "MVE")
   
   if(is.null(groups)) {
@@ -102,4 +104,17 @@ plot_robust_pca <- function(
   rm(pca_result)
   
   result
+}
+
+clusteging_pca_plot <- function(df, alpha = 0.2) {
+  # km_result <- filter_outliers_m1(km_result, max_score=0.5)
+  km_result <- filter_outliers_m2(df)
+  
+  plot_robust_pca(
+    alpha = alpha,
+    km_result %>% dplyr::select(-cluster),
+    groups = factor(km_result$cluster),
+    colours=c("orange","cyan","blue","magenta","yellow","black"),
+    labels=c("Grupo 1", "Grupo 2","Grupo 3","Grupo 4","Grupo 5","Grupo 6")
+  )
 }

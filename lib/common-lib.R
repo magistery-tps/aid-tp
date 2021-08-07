@@ -9,6 +9,7 @@ source('./import.R')
 # Basic tools
 import('./reflection.R')
 import('./data-frame.R')
+import('./scale.R')
 
 import('./csv.R')
 import('./plot.R')
