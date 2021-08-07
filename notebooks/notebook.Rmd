@@ -78,7 +78,8 @@ excluded_columns <- c(
   'Est.Dia.in.KM.min.',
   'Est.Dia.in.KM.max.',
   'Equinox',
-  'Orbit.Uncertainity'
+  'Orbit.Uncertainity',
+  'Perihelion.Time'
 )
 
 ds_step_1 <- dataset %>% dplyr::select(-excluded_columns) %>% na.omit
@@ -88,7 +89,7 @@ str(ds_step_1)
 ```
 
 
-### 1.3. Tomamo una muestra del 80% del dataset.
+### 1.3. Tomamos una muestra del 80% del dataset.
 
 La idea de este paso es evitar tener los mismos resultado que otros análisis 
 pre-existentes en kaggle. Para esto ordenamos aleatoria-mente las observaciones 
@@ -109,8 +110,9 @@ rm(ds_step_1)
 ## 2. Eliminamos las columnas que están altamente co-relacionadas
 
 Excluimos las columnas que tienen un correlación mayor al 80%. 
-Del grupo altamenten correlacionesdos nos quedamos con una sola variable ya 
-que todas con muy simialres.
+Del cada grupo atentamente co-relacionado nos quedamos con una sola variable, ya 
+que todas con muy similares.
+
 
 ```{r}
 high_correlated_columns <- find_high_correlated_columns(
@@ -166,8 +168,19 @@ En este apartado vamos a internar agrupas las variables que son parecida y
 luego seleccionar una de cada grupo. Es otra forma de eliminar variables muy 
 correlaciones
 
+
 ```{r}
-kmeans_variable_clusters(feat(ds_step_4), n_clusters = n_best_features)
+scaled_ds_step_4 <- feat(ds_step_4) %>% mutate(~(scale(.) %>% as.vector))
+
+clustering_metrics_plot(scaled_ds_step_4)
+```
+
+```{r}
+kmeans_variable_clusters(feat(ds_step_4), n_clusters = 2)
+```
+
+```{r}
+kmeans_variable_clusters(feat(ds_step_4), n_clusters = 4)
 ```
 
 
@@ -201,6 +214,30 @@ rm(ds_step_5)
 
 
 ## 6. Análisis Exploratorio
+
+
+### 6.1. Proporción de classes.
+
+Se puede ver que el numero de casos negativos es mucho mas alto 
+que el numero de casos positivos.
+
+```{r}
+ggplot(
+  ds_step_6 %>% group_by(Hazardous) %>% tally(), 
+  aes(x=Hazardous, y=n)) +
+  geom_bar(stat="identity", width=0.8)
+```
+
+
+```{r}
+ds_step_6 %>% 
+  group_by(Hazardous) %>% 
+  tally() %>% 
+  dplyr::rename(Count = n) %>%
+  mutate(Percent = (Count / nrow(ds_step_6))*100)
+```
+
+
 
 ### 6.1. Boxplot comparativos
 ```{r, fig.align='center', fig.height = 6, fig.width = 10}

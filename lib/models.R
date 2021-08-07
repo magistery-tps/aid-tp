@@ -102,8 +102,7 @@ xgboost_predict <- function(model, features, threshold=.5, positive=1, negative=
 model_predict <- function(model, features, threshold=.5, positive=1, negative=0) {
   prediction <- predict(model, features)
   ifelse(prediction >= threshold, positive, negative)
-} 
-
+}
 
 kmeans_variable_clusters <- function(features, n_clusters) {
   km_result <- kmeans(t(scale(features)), n_clusters)
