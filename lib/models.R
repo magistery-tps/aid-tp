@@ -118,16 +118,16 @@ kmeans_variable_clusters <- function(features, n_clusters) {
     dplyr::summarise(variable = toString(unique(variable)))  
 }
 
-kmeans_predict <- function(ds, scale_fn, k) {
-  model <- kmeans(scale_fn(ds), k)
+kmeans_predict <- function(ds, scale_fn, features_fn, k) {
+  model <- kmeans(scale_fn(features_fn(ds)), k)
 
   km_result <- data.frame(ds)
   km_result$cluster <- model$cluster
   km_result
 }
 
-hc_predict <- function(model, features, k) {
-  hc_result <- data.frame(features)
+hc_predict <- function(model, ds, k) {
+  hc_result <- data.frame(ds)
   hc_result$cluster <- cutree(model, k=k)
   hc_result
 }

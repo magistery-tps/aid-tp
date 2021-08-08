@@ -218,11 +218,8 @@ rm(ds_step_5)
 Se puede ver que el numero de casos negativos es mucho mas alto 
 que el numero de casos positivos.
 
-```{r}
-ggplot(
-  ds_step_6 %>% group_by(Hazardous) %>% tally(), 
-  aes(x=Hazardous, y=n)) +
-  geom_bar(stat="identity", width=0.8)
+```{r, fig.align='center', fig.height = 4, fig.width = 4}
+plot_hazardous_proportion(ds_step_6)
 ```
 
 
@@ -245,12 +242,6 @@ coparative_boxplot(feat(ds_step_6), to_col=n_best_features)
 ### 6.2. Histogramas y densidad
 
 ```{r, fig.align='center', fig.height = 6, fig.width = 10}
-
-
-ds_step_6
-
-
-
 comparative_histplot(feat(ds_step_6), to_col=n_best_features)
 ```
 
@@ -954,12 +945,30 @@ data.frame(
 
 ### 11.2. Kmeans
 
-```{r}
+```{r, fig.align='center', fig.height = 8, fig.width = 10}
 max_silhouette_k <- clustering_max_sil_k(ds_max_min_scale)
 
-km_predictions <- kmeans_predict(ds_step_6, max_min_scale, max_silhouette_k)
+km_predictions <- kmeans_predict(
+  ds_step_6,
+  scale_fn    = max_min_scale, 
+  features_fn = feat, 
+  k           = max_silhouette_k
+)
 
-clusteging_pca_plot(km_predictions)
+clusteging_pca_plot(km_predictions, filter_outliers = TRUE)
+```
+
+
+```{r,  fig.align='center', fig.height = 4, fig.width = 4}
+plot_groups_by_hazardous(km_predictions)
+
+km_data <- features_mean_by_group(km_predictions)
+
+plot_minimum_orbit_intersection_by_group(km_data)
+plot_absolute_magnitude_by_group(km_data)
+plot_est_dia_in_miles_min_by_group(km_data)
+plot_Perihelion.Distance_by_group(km_data)
+plot_inclination_by_group(km_data)
 ```
 
 
@@ -977,14 +986,10 @@ rm(any)
 ```
 
 
-```{r}
-n_clusters <- 2
-```
-
 
 Matriz de distancias euclídeas 
 ```{r}
-distances_matrix <- dist(x = ds_hc, method = "euclidean") 
+distances_matrix <- dist(x = feat(ds_hc), method = "euclidean") 
 ```
 
 
@@ -1013,11 +1018,11 @@ data.frame(
 Grafica del dendograma para las predicciones del modelo **Average**:
 
 ```{r, fig.align='center', fig.height = 6, fig.width = 10}
-plot_dendrogram(hc_average_model,  n_clusters)
+plot_dendrogram(hc_average_model,  max_silhouette_k)
 ```
 
 ```{r}
-hc_predictions <- hc_predict(hc_average_model, ds_hc, n_clusters)
+hc_predictions <- hc_predict(hc_average_model, ds_hc, max_silhouette_k)
 ```
 
 
@@ -1026,9 +1031,16 @@ clusteging_pca_plot(hc_predictions, alpha = 1)
 ```
 
 
+```{r,  fig.align='center', fig.height = 4, fig.width = 4}
+hc_data <- features_mean_by_group(hc_predictions)
 
-
-
+plot_groups_by_hazardous(hc_predictions)
+plot_minimum_orbit_intersection_by_group(hc_data)
+plot_absolute_magnitude_by_group(hc_data)
+plot_est_dia_in_miles_min_by_group(hc_data)
+plot_Perihelion.Distance_by_group(hc_data)
+plot_inclination_by_group(hc_data)
+```
 
 
 

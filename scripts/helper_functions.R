@@ -13,8 +13,13 @@ import('../lib/importance.R')
 #
 # Devuelve únicamente los features del dataset.
 #
-feat <- function(df) df %>% dplyr::select(-Hazardous)
-
+feat <- function(df) {
+  if('Hazardous' %in% colnames(df)) {
+    df %>% dplyr::select(-Hazardous)    
+  } else {
+    df
+  }
+}
 #
 # Devuelve únicamente la variable target.
 #
@@ -106,15 +111,95 @@ plot_robust_pca <- function(
   result
 }
 
-clusteging_pca_plot <- function(df, alpha = 0.2) {
-  # km_result <- filter_outliers_m1(km_result, max_score=0.5)
-  km_result <- filter_outliers_m2(df)
+clusteging_pca_plot <- function(df, alpha = 0.2, filter_outliers=FALSE) {
+  if(filter_outliers) {
+    # km_result <- filter_outliers_m1(km_result, max_score=0.5)
+    data <- filter_outliers_m2(df)
+  } else {
+    data <- df
+  }
   
   plot_robust_pca(
     alpha = alpha,
-    km_result %>% dplyr::select(-cluster),
-    groups = factor(km_result$cluster),
+    data %>% dplyr::select(-cluster),
+    groups = factor(data$cluster),
     colours=c("orange","cyan","blue","magenta","yellow","black"),
     labels=c("Grupo 1", "Grupo 2","Grupo 3","Grupo 4","Grupo 5","Grupo 6")
   )
 }
+
+
+plot_hazardous_proportion <- function(df) {
+  data <- df %>% 
+    dplyr::mutate(
+      Peligroso = ifelse(Hazardous == 1, 'Si', 'No'),
+    ) %>%
+    dplyr::group_by(Peligroso) %>%
+    tally() %>%
+    dplyr::mutate(Cantidad = n)
+
+  ggplot(data, aes(fill=Peligroso, y=Cantidad, x=Peligroso)) + 
+    geom_bar(position="stack", stat="identity")
+}
+
+
+features_mean_by_group <-function(df) {
+  df %>% 
+    dplyr::mutate(
+      Grupo = ifelse(cluster == 1, 'Grupo 1', ifelse(cluster == 2, 'Grupo 2', 'Grupo 3'))
+    ) %>%
+    dplyr::group_by(Grupo) %>%
+    dplyr::summarise(
+      Minimum.Orbit.Intersection = mean(Minimum.Orbit.Intersection),
+      Absolute.Magnitude = mean(Absolute.Magnitude),
+      Est.Dia.in.Miles.min. = mean(Est.Dia.in.Miles.min.),
+      Perihelion.Distance = mean(Perihelion.Distance),
+      Inclination = mean(Inclination)
+    )
+}
+
+plot_minimum_orbit_intersection_by_group <- function(df) {
+  ggplot(df, aes(fill=Grupo, y=Minimum.Orbit.Intersection, x=Grupo)) + 
+    geom_bar(position="stack", stat="identity") +
+    theme(legend.position = "none")
+}
+
+plot_absolute_magnitude_by_group <- function(df) {
+  ggplot(df, aes(fill=Grupo, y=Absolute.Magnitude, x=Grupo)) + 
+    geom_bar(position="stack", stat="identity") +
+    theme(legend.position = "none")
+}
+
+plot_est_dia_in_miles_min_by_group <- function(df) {
+  ggplot(df, aes(fill=Grupo, y=Est.Dia.in.Miles.min., x=Grupo)) + 
+    geom_bar(position="stack", stat="identity") +
+    theme(legend.position = "none")
+}
+
+plot_Perihelion.Distance_by_group <- function(df) {
+  ggplot(df, aes(fill=Grupo, y=Perihelion.Distance, x=Grupo)) + 
+    geom_bar(position="stack", stat="identity") +
+    theme(legend.position = "none")
+}
+
+plot_inclination_by_group <- function(df){
+  ggplot(df, aes(fill=Grupo, y=Inclination, x=Grupo)) + 
+    geom_bar(position="stack", stat="identity") +
+    theme(legend.position = "none")
+}
+
+
+plot_groups_by_hazardous <- function(df) {
+  data <- df %>% 
+    dplyr::mutate(
+      Peligroso = ifelse(Hazardous == 1, 'Si', 'No'),
+      Grupo = ifelse(cluster == 1, 'Grupo 1', ifelse(cluster == 2, 'Grupo 2', 'Grupo 3'))
+    ) %>%
+    dplyr::group_by(Grupo, Peligroso) %>%
+    tally() %>%
+    dplyr::mutate(Cantidad = n)
+  
+  ggplot(data, aes(fill=Peligroso, y=Cantidad, x=Grupo)) + 
+    geom_bar(position="stack", stat="identity")
+}
+

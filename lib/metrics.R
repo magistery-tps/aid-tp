@@ -181,8 +181,8 @@ clustering_metrics_plot <- function(data, kmax=10, f="kmeans") {
   plot_sil_sse(metrics, kmax)
 }
 
-plot_dendrogram <- function(hc_result, k) {
-  plot(hc_result)
+plot_dendrogram <- function(hc_result, k, horiz = TRUE) {
+  plot(hc_result, horiz = horiz)
   rect.hclust(hc_result, k=k, border="red")
 }
   
