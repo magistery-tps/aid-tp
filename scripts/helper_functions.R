@@ -39,7 +39,11 @@ target_to_str <- function(df) {
 # argumento max_score. También permite visualizar un boxplot de la variable
 # score, para ver donde se puede poner el punto de corte.
 #
-filter_outliers_m1 <- function(df, max_score, plot_score_boxplot=TRUE) {
+filter_outliers_m1 <- function(df, max_score, plot_score_boxplot=TRUE, seed=NULL) {
+  if(!is.null(seed)) {
+    set.seed(seed)
+  }
+  
   tmp_df <- data.frame(df)
   tmp_df$score <- isolation_forest_scores(feat(tmp_df), plot=plot_score_boxplot)
   
@@ -54,8 +58,10 @@ filter_outliers_m1 <- function(df, max_score, plot_score_boxplot=TRUE) {
   ds_without_outliers
 }
 
-
-filter_outliers_m2 <- function(df) {
+filter_outliers_m2 <- function(df, seed=NULL) {
+  if(!is.null(seed)) {
+    set.seed(seed)
+  }
   outliers_index <- check_outliers(df)
   
   ds_without_outliers <- df[!outliers_index,]
@@ -86,7 +92,9 @@ plot_robust_pca <- function(
   groups         = NULL,
   seed           = 1
 ) {
-  set.seed(seed)
+  if(!is.null(seed)) {
+    set.seed(seed)
+  }
   pca_result <- pca(feat(df), scale = TRUE, robust = "MVE")
   
   if(is.null(groups)) {
@@ -111,20 +119,34 @@ plot_robust_pca <- function(
   result
 }
 
-clusteging_pca_plot <- function(df, alpha = 0.2, filter_outliers=FALSE) {
+clusteging_pca_plot <- function(
+  df,
+  filter_outliers = FALSE,
+  alpha           = 0.1,
+  obs.scale       = 1,
+  var.scale       = 3,
+  varname.adjust  = 1.2,
+  varname.size    = 3.5,
+  seed            = 1
+) {
   if(filter_outliers) {
     # km_result <- filter_outliers_m1(km_result, max_score=0.5)
-    data <- filter_outliers_m2(df)
+    data <- filter_outliers_m2(df, seed)
   } else {
     data <- df
   }
-  
+
   plot_robust_pca(
-    alpha = alpha,
     data %>% dplyr::select(-cluster),
-    groups = factor(data$cluster),
-    colours=c("orange","cyan","blue","magenta","yellow","black"),
-    labels=c("Grupo 1", "Grupo 2","Grupo 3","Grupo 4","Grupo 5","Grupo 6")
+    obs.scale      = obs.scale,
+    var.scale      = var.scale,
+    varname.adjust = varname.adjust,
+    varname.size   = varname.size,
+    seed           = seed,
+    alpha          = alpha,
+    groups         = factor(data$cluster),
+    colours        = c("orange","cyan","blue","magenta","yellow","black"),
+    labels         = c("Grupo 1", "Grupo 2","Grupo 3","Grupo 4","Grupo 5","Grupo 6")
   )
 }
 

@@ -955,7 +955,7 @@ km_predictions <- kmeans_predict(
   k           = max_silhouette_k
 )
 
-clusteging_pca_plot(km_predictions, filter_outliers = TRUE)
+clusteging_pca_plot(km_predictions)
 ```
 
 
