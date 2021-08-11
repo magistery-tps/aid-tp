@@ -26,11 +26,11 @@ feat <- function(df) {
 target <- function(df) df %>% pull(Hazardous)
 
 target_to_num <- function(df) {
-  df %>% mutate(Hazardous = case_when(Hazardous %in% c('True') ~ 1, TRUE ~ 0))
+  df %>% mutate(Hazardous = ifelse(tolower(Hazardous) == "true", 1, 0))
 }
 
 target_to_str <- function(df) {
-  df %>% mutate(Hazardous = ifelse(Hazardous == 1, 'TRUE', 'FALSE'))
+  df %>% mutate(Hazardous = ifelse(Hazardous == 1, 'true', 'false'))
 }
 
 
@@ -81,7 +81,7 @@ filter_outliers_m2 <- function(df, seed=NULL) {
 plot_robust_pca <- function(
   df,
   target_col     = "Hazardous",
-  title          = "Hazardous Asteroids",
+  title          = "Asteroides Peligrosos",
   alpha          = 0.08,
   obs.scale      = 2,
   var.scale      = 0.5,
@@ -100,6 +100,8 @@ plot_robust_pca <- function(
   if(is.null(groups)) {
     groups <- factor(df[[target_col]])
   }
+  
+  print(pca_result)
 
   result <- plot_pca(
     pca_result,
@@ -127,7 +129,9 @@ clusteging_pca_plot <- function(
   var.scale       = 3,
   varname.adjust  = 1.2,
   varname.size    = 3.5,
-  seed            = 1
+  seed            = 1,
+  labels         = c("Grupo 1", "Grupo 2","Grupo 3","Grupo 4","Grupo 5","Grupo 6"),
+  colours        = c("yellow","blue", "cyan", "magenta","yellow","black")
 ) {
   if(filter_outliers) {
     # km_result <- filter_outliers_m1(km_result, max_score=0.5)
@@ -135,7 +139,7 @@ clusteging_pca_plot <- function(
   } else {
     data <- df
   }
-
+  
   plot_robust_pca(
     data %>% dplyr::select(-cluster),
     obs.scale      = obs.scale,
@@ -145,8 +149,8 @@ clusteging_pca_plot <- function(
     seed           = seed,
     alpha          = alpha,
     groups         = factor(data$cluster),
-    colours        = c("orange","cyan","blue","magenta","yellow","black"),
-    labels         = c("Grupo 1", "Grupo 2","Grupo 3","Grupo 4","Grupo 5","Grupo 6")
+    colours        = colours,
+    labels         = labels
   )
 }
 

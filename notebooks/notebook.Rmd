@@ -126,7 +126,7 @@ rm(ds_step_2)
 str(ds_step_3)
 ```
 
-## 3. Transformamos la varaible a predecir a tipo numericas
+## 3. Transformamos la variable a predecir a tipo numericas
 
 ```{r}
 ds_step_4 <- target_to_num(ds_step_3)
@@ -207,8 +207,6 @@ ds_step_6 <- filter_outliers_m1(ds_step_5, max_score = 0.55)
 
 rm(ds_step_5)
 ```
-
-
 
 ## 6. Análisis Exploratorio
 
@@ -310,8 +308,7 @@ plot_pca_original_variables(feat(ds_step_6))
 ```
 
 
-### 6.9. PCA: Con observaciones discriminadas pro clase. Primero quitamos 
-outliers para poder ver con mas claridad el biplot.
+### 6.9. PCA: Incluyendo la variable a predecir.
 
 
 ```{r, fig.align='center', fig.height = 6, fig.width = 10}
@@ -945,6 +942,8 @@ data.frame(
 
 ### 11.2. Kmeans
 
+#### 11.2.1 Usando K optimo
+
 ```{r, fig.align='center', fig.height = 8, fig.width = 10}
 max_silhouette_k <- clustering_max_sil_k(ds_max_min_scale)
 
@@ -954,10 +953,9 @@ km_predictions <- kmeans_predict(
   features_fn = feat, 
   k           = max_silhouette_k
 )
-
+  
 clusteging_pca_plot(km_predictions)
 ```
-
 
 ```{r,  fig.align='center', fig.height = 4, fig.width = 4}
 plot_groups_by_hazardous(km_predictions)
@@ -970,7 +968,11 @@ plot_est_dia_in_miles_min_by_group(km_data)
 plot_Perihelion.Distance_by_group(km_data)
 plot_inclination_by_group(km_data)
 ```
-
+```{r}
+km_predictions2 <- data.frame(km_predictions)
+km_predictions2$cluster = km_predictions$Hazardous
+clusteging_pca_plot(km_predictions2, labels = c('No', 'Si'),  colours = c("red", "blue"), alpha = 0.2)
+```
 
 ## 11.3 Hierarchical Clustering
 
@@ -1035,7 +1037,7 @@ clusteging_pca_plot(hc_predictions, alpha = 1)
 hc_data <- features_mean_by_group(hc_predictions)
 
 plot_groups_by_hazardous(hc_predictions)
-plot_minimum_orbit_intersection_by_group(hc_data)
+plot_minimum_orbit_intersection_by_group(feat(hc_data))
 plot_absolute_magnitude_by_group(hc_data)
 plot_est_dia_in_miles_min_by_group(hc_data)
 plot_Perihelion.Distance_by_group(hc_data)

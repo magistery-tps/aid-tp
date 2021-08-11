@@ -21,7 +21,7 @@ p_load(
 #
 
 #
-# Metrica F Beta score
+# Métrica F Beta score
 #
 fbeta_score <- function(prediction, reality, model="", positive=1, beta=1, show=TRUE) {
   score <- FBeta_Score(
@@ -37,7 +37,6 @@ fbeta_score <- function(prediction, reality, model="", positive=1, beta=1, show=
     score 
   }
 }
-
 
 #
 # Calcula la curva ROC
