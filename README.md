@@ -40,15 +40,14 @@ $ cd aid-tp
 
 Para ejecutar el proyecto es necesario realizar los siguientes pasos:
 
-**Paso 1**: Luego en RStudio abrir el archivo `scripts/notebook.Rmd`
+**Paso 1**: En RStudio abrir el archivo `scripts/notebook.Rmd`.
 
-**Paso 2**: Luego en la consola ejecutar la siguiente linea
+**Paso 2**: Luego en la consola ejecutar la siguiente linea:
 
 ```R
 install.packages('pacman')
 ```
 
-Esto ens necesario ya que para isntalar las depedencia del proyecto se utiliza el sistema de paquetes [pacman](https://github.com/trinker/pacman). Este permite meduante la función `p_load` instalar las los paquetes si cuando es necesario o cargarlo en el caso que ya estuvierna instalados.  
-
+Esto es necesario para instalar los paquetes utilizados en el proyecto. Se utilizo el sistema de paquetes [pacman](https://github.com/trinker/pacman)  el cual instala y carga los paquetes mediante la funcion `p_load`.
 
 
