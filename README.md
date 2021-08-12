@@ -25,8 +25,6 @@ Hay dos alternativas para descargar el proyecto:
 
 Se peude descargar directamente el proyecto desde [Aqui](https://github.com/magistery-tps/aid-tp/archive/refs/heads/main.zip). 
 
-![image](https://user-images.githubusercontent.com/962480/129281785-1c255464-51e9-41ec-a623-d8524c9e0370.png)
-
 #### Via Git
 
 Para moder ejecutar la notebook localemnte es necesario realizar los siguientes pasos:
