@@ -23,7 +23,7 @@ Hay dos alternativas para descargar el proyecto:
 
 #### Descargar directa
 
-Se peude descargar directamente el proyecto desde [Aqui](https://github.com/magistery-tps/aid-tp/archive/refs/heads/main.zip). 
+Se puede descargar directamente [Aqui](https://github.com/magistery-tps/aid-tp/archive/refs/heads/main.zip). 
 
 #### Via Git
 
