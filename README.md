@@ -10,7 +10,7 @@ Ver [Informe](https://github.com/magistery-tps/aid-tp/blob/main/docs/Informe.pdf
 
 ## Notebook
 
-En el sitio [RPubs](https://rpubs.com/) se encuentra publicada la Notebook que se tulizo apra este analisis. Ver [Notebook](https://rpubs.com/adrianmarino/aid-tp).
+En el sitio [RPubs](https://rpubs.com/) se encuentra publicada la notebook desarrollada para realizar el trabajo practico. Ver [Notebook](https://rpubs.com/adrianmarino/aid-tp).
 
 ## Fuente de datos
 
