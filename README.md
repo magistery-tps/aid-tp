@@ -21,9 +21,9 @@ Para abordar este trabajo práctico se seleccionó el dataset [NASA: Asteroids C
 
 Hay dos alternativas para descargar el proyecto:
 
-#### Decargar el proyecto
+#### Descargar directa
 
-Es la alternativa mas simple, 
+Se peude descargar directamente el proyecto desde [Aqui](https://github.com/magistery-tps/aid-tp/archive/refs/heads/main.zip). 
 
 ![image](https://user-images.githubusercontent.com/962480/129281785-1c255464-51e9-41ec-a623-d8524c9e0370.png)
 
@@ -42,20 +42,11 @@ $ cd aid-tp
 
 ### Comenzando
 
-Para moder ejecutar la notebook localemnte es necesario realizar los siguientes pasos:
+Para ejecutar el proyecto es necesario realizar los siguientes pasos:
 
-**Paso 1**: Instalar [git](https://git-scm.com/downloads).
+**Paso 1**: Luego en RStudio abrir el archivo `scripts/notebook.Rmd`
 
-**Paso 2**:  Ahora si, clonamos el repositorio.
-
-```bash
-$ git clone https://github.com/magistery-tps/aid-tp.git
-$ cd aid-tp
-```
-
-**Paso 3**: Luego en RStudio abrir el archivo `scripts/notebook.Rmd`
-
-**Paso 4**: Luego en la consola ejecutar la siguiente linea
+**Paso 2**: Luego en la consola ejecutar la siguiente linea
 
 ```R
 install.packages('pacman')
