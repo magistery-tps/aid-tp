@@ -17,7 +17,7 @@ En el sitio [RPubs](https://rpubs.com/) se encuentra publicada la notebook desar
 Para abordar este trabajo práctico se seleccionó el dataset [NASA: Asteroids Classification](https://www.kaggle.com/shrutimehta/nasa-asteroids-classification). El mismo fue generador en el [sitio cneos.jpl.nasa.gov](https://cneos.jpl.nasa.gov/) el cual tiene una herramienta de consulta de datos de asteroides y comentas.  El dataset contiene 40 variables, en su mayoría cuantitativas (Continuas) y una pocas cualitativas (Categóricas y Nominales). Para más detalle ver [nasa.csv](https://github.com/magistery-tps/aid-tp/blob/main/datasets/nasa.csv).
 
 
-### Descargar del proyecto
+### Descargar Proyecto
 
 Hay dos alternativas para descargar el proyecto:
 
@@ -36,7 +36,7 @@ $ git clone https://github.com/magistery-tps/aid-tp.git
 $ cd aid-tp
 ```
 
-### Comenzando
+### Ejecutar Notebook
 
 Para ejecutar el proyecto es necesario realizar los siguientes pasos:
 
