@@ -50,6 +50,7 @@ install.packages('pacman')
 
 Esto es necesario para instalar los paquetes utilizados en el proyecto. Se utilizo el sistema de paquetes [pacman](https://github.com/trinker/pacman)  el cual instala y carga los paquetes mediante la funcion `p_load`.
 
+**Nota:)) Es importante aclarar que el dataset ya esta incluido en el proyecto.
 
 ### Implementación
 
