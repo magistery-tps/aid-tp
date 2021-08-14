@@ -90,3 +90,7 @@ test.R
 metrics.R
 balance.R
 ```
+
+Por otro lado hay funciones que son especificas para nuestro analisis (No son genericas). Estas se encuentran en el archivo `scripts/helper_functions.R`. 
+
+
