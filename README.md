@@ -21,7 +21,7 @@ Para abordar este trabajo práctico se seleccionó el dataset [NASA: Asteroids C
 
 Hay dos alternativas para descargar el proyecto:
 
-#### Descargar directa
+#### Descarga directa
 
 Se puede descargar directamente desde [Aqui](https://github.com/magistery-tps/aid-tp/archive/refs/heads/main.zip). 
 
