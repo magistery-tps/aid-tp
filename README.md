@@ -51,3 +51,15 @@ install.packages('pacman')
 Esto es necesario para instalar los paquetes utilizados en el proyecto. Se utilizo el sistema de paquetes [pacman](https://github.com/trinker/pacman)  el cual instala y carga los paquetes mediante la funcion `p_load`.
 
 
+### Implementación
+
+Para realizar este trabajo practico, fue necesario desarrollar una libreria de funciones para abstraernos de como se realiza cada paso de nuestro analisis. De esta manera se obtienen lo siguientes beneficios:
+
+* Se simplifica notablemente la lectura del analisis principal en la [Notebook](https://rpubs.com/adrianmarino/aid-tp).
+* Se obtiene una libreria de funciones casi genericas, las cuales se podran reutilizar en proximos trabajos practicos.
+
+Luego todas la librerias se importan al inicia del la [Notebook](https://rpubs.com/adrianmarino/aid-tp) con la siguiten linea:
+
+```R
+import('../lib/common-lib.R')
+```
