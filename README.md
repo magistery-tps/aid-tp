@@ -58,8 +58,35 @@ Para realizar este trabajo practico, fue necesario desarrollar una libreria de f
 * Se simplifica notablemente la lectura del analisis principal en la [Notebook](https://rpubs.com/adrianmarino/aid-tp).
 * Se obtiene una libreria de funciones casi genericas, las cuales se podran reutilizar en proximos trabajos practicos.
 
-Luego todas la librerias se importan al inicia del la [Notebook](https://rpubs.com/adrianmarino/aid-tp) con la siguiten linea:
+Como aclaracion final, todas la librerias se importan al inicia de la [Notebook](https://rpubs.com/adrianmarino/aid-tp) con la siguiten linea:
 
 ```R
 import('../lib/common-lib.R')
+```
+
+Donde `common-lib.R` importan las siguientes librerias:
+
+```R
+# Librerias mas basicas
+reflection.R
+data-frame.R
+scale.R
+csv.R
+
+# Funciones para graficar
+plot.R
+hist.R
+pie.R
+
+# Analisis exploratorio
+importance.R
+correlation.R
+pca.R
+
+# Modelos
+set_split.R
+models.R
+test.R
+metrics.R
+balance.R
 ```
