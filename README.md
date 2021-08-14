@@ -1,4 +1,4 @@
-# Maestria en Explotación de Datos y Descubrimiento de Conocimiento - Analisis Inteligente de Datos
+# UBA - Maestria en Explotación de Datos y Descubrimiento de Conocimiento - Analisis Inteligente de Datos
 
 ## Trabajo Práctico: Asteroides Peligrosos
 
