@@ -226,3 +226,22 @@ plot_groups_by_hazardous <- function(df) {
     geom_bar(position="stack", stat="identity")
 }
 
+biplot_fn_fp <- function(data, pred) {
+  observation_with_result_type <- observations_cm(
+    data,
+    pred,
+    target_col = 'Hazardous'
+  )
+  
+  observation_cl <- observation_with_result_type %>% 
+    dplyr::mutate(cluster = result_type) %>%
+    dplyr::select(c(-pred, -true, -result_type))
+  
+  clusteging_pca_plot(
+    observation_cl, 
+    alpha     = 1,
+    labels    = c("FP", "FN", "TN", "TP"),
+    colours   = c("red","green", "white", "grey")
+  )
+}
+

@@ -800,40 +800,6 @@ data.frame(
   arrange(False.Negative, desc(Test.F2Score.Percent))
 ```
 
-```{r}
-xgb_threshold <- search_max_aur_threshold(
-  xgboost_model, 
-  feat(test_set), 
-  target(test_set),
-  xgboost_predict
-)
-
-best_xgb_test_pred  <- xgboost_predict(xgboost_model, feat(test_set),  xgb_threshold)
-
-
-table(best_xgb_test_pred, target(test_set))
-```
-
-
-```{r}
-test_observation_with_result_type <- observations_cm(
-  test_set,
-  best_xgb_test_pred,
-  target_col = 'Hazardous'
-)
-
-test_observation_with_result_type %>% 
-  group_by(result_type) %>% 
-  tally()
-```
-
-```{r}
-test_observation_with_result_type %>% filter(result_type == 'FN')
-```
-
-```{r}
-test_observation_with_result_type %>% filter(result_type == 'FP')
-```
 
 ### 10.7.3 Metricas seleccionando threshould=0.5
 
@@ -931,6 +897,59 @@ data.frame(
   arrange(False.Negative, desc(Test.F2Score.Percent))
 ```
 
+
+### 10.7.4 Veamos los Falsos Positivos y Falsos Negativos para los mejores modelos
+
+
+#### 10.7.4.1 XGBoost con maximizo AUR
+
+```{r, fig.align='center', fig.height = 8, fig.width = 10}
+xgb_threshold <- search_max_aur_threshold(
+  xgboost_model, 
+  feat(test_set), 
+  target(test_set),
+  xgboost_predict
+)
+
+xgb_test_pred  <- xgboost_predict(xgboost_model, feat(test_set),  xgb_threshold)
+
+
+biplot_fn_fp(test_set, xgb_test_pred)
+```
+
+
+#### 10.7.4.2 QDA con maximizo AUR
+
+```{r, fig.align='center', fig.height = 8, fig.width = 10}
+qda_threshold <- search_max_aur_threshold(
+  qda_model, 
+  feat(test_set), 
+  target(test_set),
+  xda_predict
+)
+
+qda_test_pred  <- xda_predict(qda_model, feat(test_set), qda_threshold)
+
+biplot_fn_fp(test_set, qda_test_pred)
+```
+
+
+
+#### 10.7.4.3 SVM con maximizo AUR
+
+
+```{r, fig.align='center', fig.height = 8, fig.width = 10}
+svm_threshold <- search_max_aur_threshold(
+  svm_model, 
+  feat(test_set), 
+  target(test_set),
+  model_predict
+)
+
+svm_test_pred  <- model_predict(svm_model, test_set,  svm_threshold)
+
+biplot_fn_fp(test_set, svm_test_pred)
+```
 
 
 ## 11. KMeans Clustering
