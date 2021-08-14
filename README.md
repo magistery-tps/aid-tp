@@ -25,7 +25,7 @@ Hay dos alternativas para descargar el proyecto:
 
 Se puede descargar directamente desde [Aqui](https://github.com/magistery-tps/aid-tp/archive/refs/heads/main.zip). 
 
-#### Via Git
+#### Descarga via Git
 
 **Paso 1**: Instalar [git](https://git-scm.com/downloads).
 
