@@ -20,6 +20,44 @@ p_load(
 #
 #
 
+# 
+# Devuelve un dataframe con features + true(target) + predicion 
+#
+features_pred_true_df <- function(data, pred_target, target_col) {
+  true_target <- label(test_set, target_col)
+  features <- features(test_set, target_col)
+  features$pred <- pred_target
+  features$true <- true_target
+  features
+}
+
+
+#
+# Devuelve el datafram input (data) con las siguientes columnas:
+#  - Columnas de features
+#  - Columna con el valor real del target(true)
+#  - Columna con el valor predicho (pred)
+#  - Una columna categorica que define que tipo de resutado es: TP.FP, FN o FP.
+# De esta manera es posible analizar los features de cada grupo de 
+# resultados FP, TP, etc...
+#
+observations_cm <- function(
+  data, 
+  pred_target, 
+  target_col, 
+  positive_class=1, 
+  negative_class=0
+) {
+  features_pred_true_df(data, pred_target, target_col) %>%
+    mutate(result_type = case_when(
+      pred == positive_class & pred == true ~ 'TP',
+      pred == positive_class & pred != true ~ 'FP',
+      pred == negative_class & pred == true ~ 'TN',
+      pred == negative_class & pred != true ~ 'FN'
+    ))
+}
+
+
 #
 # Métrica F Beta score
 #
@@ -184,5 +222,11 @@ plot_dendrogram <- function(hc_result, k) {
   plot(hc_result)
   rect.hclust(hc_result, k=k, border="red")
 }
+
+
+
+
+
+
   
 

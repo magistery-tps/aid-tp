@@ -10,20 +10,17 @@ import('../lib/pca.R')
 import('../lib/importance.R')
 # ------------------------------------------------------------------------------
 
+
+#
 #
 # Devuelve únicamente los features del dataset.
 #
-feat <- function(df) {
-  if('Hazardous' %in% colnames(df)) {
-    df %>% dplyr::select(-Hazardous)    
-  } else {
-    df
-  }
-}
+feat <- function(df) features(df, 'Hazardous')
+
 #
-# Devuelve únicamente la variable target.
+# Devuelve únicamente la variable target o label.
 #
-target <- function(df) df %>% pull(Hazardous)
+target <- function(df) label(df, 'Hazardous')
 
 target_to_num <- function(df) {
   df %>% mutate(Hazardous = ifelse(tolower(Hazardous) == "true", 1, 0))

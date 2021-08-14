@@ -7,7 +7,27 @@ p_load(foreach)
 #
 #
 #
+
 #
+#
+# Devuelve únicamente los features del dataset.
+#
+features <- function(df, target_col) {
+  if(target_col %in% colnames(df)) {
+    df %>% dplyr::select(-target_col)    
+  } else {
+    df
+  }
+}
+
+#
+# Devuelve únicamente la variable label.
+#
+label <- function(df, target_col) {
+  df %>% 
+    dplyr::select(target_col) %>% 
+    dplyr::pull()
+}
 
 #
 # Calcula la medio de una tabla de frecuencias

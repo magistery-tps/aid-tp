@@ -220,7 +220,6 @@ que el numero de casos positivos.
 plot_hazardous_proportion(ds_step_6)
 ```
 
-
 ```{r}
 ds_step_6 %>% 
   group_by(Hazardous) %>% 
@@ -801,6 +800,40 @@ data.frame(
   arrange(False.Negative, desc(Test.F2Score.Percent))
 ```
 
+```{r}
+xgb_threshold <- search_max_aur_threshold(
+  xgboost_model, 
+  feat(test_set), 
+  target(test_set),
+  xgboost_predict
+)
+
+best_xgb_test_pred  <- xgboost_predict(xgboost_model, feat(test_set),  xgb_threshold)
+
+
+table(best_xgb_test_pred, target(test_set))
+```
+
+
+```{r}
+test_observation_with_result_type <- observations_cm(
+  test_set,
+  best_xgb_test_pred,
+  target_col = 'Hazardous'
+)
+
+test_observation_with_result_type %>% 
+  group_by(result_type) %>% 
+  tally()
+```
+
+```{r}
+test_observation_with_result_type %>% filter(result_type == 'FN')
+```
+
+```{r}
+test_observation_with_result_type %>% filter(result_type == 'FP')
+```
 
 ### 10.7.3 Metricas seleccionando threshould=0.5
 

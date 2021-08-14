@@ -2,7 +2,12 @@
 # Import dependencies
 # ------------------------------------------------------------------------------
 library(pacman)
-p_load(mvnormtest, biotools, car)
+p_load(
+  mvnormtest, 
+  biotools, 
+  car,
+  DescTools
+)
 setwd(this.path::this.dir())
 source('./import.R')
 #
@@ -12,6 +17,16 @@ import('./data-frame.R')
 #
 #
 #
+
+#
+# Test de Hoteling para comparación de medias de dos poblaciones normales
+#
+mult_hoteling_test <- function(df, target_col) {
+    HotellingsT2Test(
+      as.matrix(df %>% dplyr::select(-target_col)),
+      data = df
+    )
+}
 
 #
 # Test de normalidad multi-variado
