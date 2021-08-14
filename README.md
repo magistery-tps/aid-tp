@@ -53,7 +53,7 @@ Esto es necesario para instalar los paquetes utilizados en el proyecto. Se utili
 
 ### Implementación
 
-Para realizar este trabajo practico, fue necesario desarrollar una libreria de funciones para abstraernos de como se realiza cada paso de nuestro analisis. De esta manera se obtienen lo siguientes beneficios:
+Para realizar este trabajo practico, fue necesario desarrollar una libreria de funciones para abstraernos de como se realiza cada paso de nuestro analisis. De esta manera se obtienen los siguientes beneficios:
 
 * Se simplifica notablemente la lectura del analisis principal en la [Notebook](https://rpubs.com/adrianmarino/aid-tp).
 * Se obtiene una libreria de funciones casi genericas, las cuales se podran reutilizar en proximos trabajos practicos.
