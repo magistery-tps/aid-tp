@@ -65,7 +65,7 @@ Como aclaracion final, todas la librerias se importan al inicia de la [Notebook]
 import('../lib/common-lib.R')
 ```
 
-Donde `common-lib.R` importan las siguientes librerias:
+Donde `common-lib.R` importa las siguientes librerias:
 
 ```R
 # Librerias mas basicas
